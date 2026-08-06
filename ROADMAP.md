@@ -1,19 +1,23 @@
 # Roadmap
 
 ## Phase 1: Foundation (v0.1.x → v0.3.x)
-- [ ] Scaffold Next.js 16 app with TypeScript and Tailwind CSS
-- [ ] Set up Prisma ORM with PostgreSQL database
+- [x] Scaffold Next.js 16 app with TypeScript and Tailwind CSS
+- [x] Set up Prisma ORM with PostgreSQL adapter (`prisma/schema.prisma`)
+- [x] ESLint 9 + TypeScript strict mode configured
 - [ ] Implement multi-tenant schema (Agent, Team, Brokerage hierarchy)
 - [ ] Build Smart Contact Management with CSV import/export
 - [ ] Smart Filter segments for dynamic lead lists
 - [ ] MLS-compliant database schemas
 
 ## Phase 2: AI Core (v0.4.x → v0.6.x)
-- [ ] Secure API Vault with AES symmetric encryption for provider keys
-- [ ] Multi-Model Router: tiered routing (fast/cheap → complex/expensive)
+- [x] Secure API Vault with AES symmetric encryption for provider keys (`src/lib/encryption.ts`)
+- [x] `/api/vault/route.ts` — API key CRUD endpoints
+- [x] `/api/router/route.ts` — HyperNexus tiered routing logic
+- [x] Model Manager UI with provider toggles (`src/components/ModelManager.tsx`)
+- [ ] Multi-Model Router: tiered routing (fast/cheap → complex/expensive) — logic in place, needs integration
 - [ ] HyperNexus natural-language workflow engine (MCP-based)
-- [ ] Model Manager UI with provider toggles (OpenAI, Gemini, Anthropic, DeepSeek, Qwen)
 - [ ] Local model support: Hermes Agent, OpenClaw connectors
+- [ ] Connect frontend UI to API routes
 
 ## Phase 3: Marketing Engine (v0.7.x → v0.9.x)
 - [ ] Social Studio: OAuth integrations (Facebook, Instagram, LinkedIn, YouTube, Google Business)
