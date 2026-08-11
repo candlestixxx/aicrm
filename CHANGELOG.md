@@ -2,6 +2,13 @@
 
 All notable changes to the AiCRM project will be documented in this file.
 
+## [0.2.1] — 2026-08-05
+
+### Repository
+- Sync verification: all branches reconciled (jules already merged)
+- Working tree clean, build verified
+- Documentation refreshed (ROADMAP, TODO, STRUCTURE, HANDOFF)
+
 ## [0.2.0] — 2026-08-05
 
 ### Added (Next.js Scaffold — merged from jules branch)
