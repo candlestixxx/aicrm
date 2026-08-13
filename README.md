@@ -6,12 +6,52 @@ This platform matches the deep, industry-specific functionalities of platforms l
 
 ---
 
+## 🚀 Running Locally
+
+> **Permanent URL: http://localhost:3001** (bookmark this — port 3000 is reserved for the original CRM)
+
+```bash
+npm install
+npm run dev        # starts on port 3001
+```
+
+**Demo login:** `demo@aicrm.com` / `demo-password`
+
+**📖 HyperNexus guide:** see [HYPERNEXUS.md](HYPERNEXUS.md) — commands, workflows, and MCP/Claude Desktop setup.
+
+**🔌 Control plane integration:** see [INTEGRATION.md](INTEGRATION.md) — how the real [HyperNexus](https://github.com/HyperNexusllc/HyperNexus) control plane is wired into pi and AiCRM (git submodule + kernel bridge).
+
+---
+
 ## 🧠 1. The Orchestration Layer (HyperNexus)
 
 Instead of traditional, rigid API scripts, the CRM’s central nervous system is powered by **HyperNexus**. 
 
 * **Natural Language Workflows:** Users type plain-English commands (e.g., *"If a lead replies 'Yes', update their stage to 'Hot' and draft an email to the broker"*), and HyperNexus translates that intent into executable backend database hooks.
 * **Autonomous Operation:** HyperNexus acts as a universal adapter. It empowers AI agents to directly query the CRM database, update pipeline stages, and trigger communications without manual user input.
+
+### How to Use HyperNexus (3 ways)
+
+**1. Commands (natural language)** — in the *HyperNexus* tab, type plain English:
+- `summarize my brokerage`
+- `create a task to call John about the offer`
+- `update lead [name] to hot`
+- `list contacts` · `list properties` · `list tasks` · `get contact [id]`
+
+**2. Workflows (if/then automation)** — in the *HyperNexus* tab, build automations like:
+> When a lead replies **"yes"** → mark them **Hot** and notify the broker.
+
+Triggers: communication received, lead created/updated, contact created, task completed.
+Actions: update stage, create task, log activity, send communication, notify.
+
+**3. MCP (connect external AI agents)** — HyperNexus speaks the [Model Context Protocol](https://modelcontextprotocol.io), so any MCP client (Claude Desktop, Cursor, custom agents) can use your CRM as tools:
+```
+POST http://localhost:3001/api/mcp
+Authorization: Bearer <MCP_TOKEN>
+```
+Exposed tools: `list_contacts`, `get_contact`, `create_contact`, `update_lead_stage`, `list_properties`, `create_task`, `list_tasks`, `summarize_brokerage`, `search_contacts`, `log_activity`.
+
+> **What is MCP?** [Model Context Protocol](https://modelcontextprotocol.io) is the open standard (by Anthropic) for connecting AI assistants to tools and data. HyperNexus is this CRM's built-in MCP orchestration engine — not a separate downloadable product.
 
 ## 🔀 2. The Multi-Model Router & API Vault
 

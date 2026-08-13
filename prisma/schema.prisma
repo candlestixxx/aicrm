@@ -1,18 +1,360 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
+}
+
+// ─── Authentication ────────────────────────────────────────────
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  passwordHash  String
+  name          String?
+  role          String    @default("agent") // agent | admin | brokerage_admin
+  avatarUrl     String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  agentProfile  Agent?
+  accounts      Account[]
+  sessions      Session[]
+}
+
+model Account {
+  id                String  @id @default(uuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refreshToken      String?
+  accessToken       String?
+  expiresAt         Int?
+  tokenType         String?
+  scope             String?
+  idToken           String?
+  sessionState      String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(uuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ─── Multi-Tenant Hierarchy ────────────────────────────────────
+model Brokerage {
+  id          String   @id @default(uuid())
+  name        String
+  slug        String   @unique
+  logoUrl     String?
+  address     String?
+  phone       String?
+  website     String?
+  mlsId       String?  // MLS organization ID
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  teams       Team[]
+  agents      Agent[]
+  contacts    Contact[]
+  properties  Property[]
+  pipelines   Pipeline[]
+  campaigns   Campaign[]
+  workflows   Workflow[]
+}
+
+model Team {
+  id          String   @id @default(uuid())
+  name        String
+  brokerageId String
+  leadAgentId String?  @unique // Team lead (one agent leads one team)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  brokerage   Brokerage @relation(fields: [brokerageId], references: [id], onDelete: Cascade)
+  leadAgent   Agent?    @relation("TeamLead", fields: [leadAgentId], references: [id])
+  agents      Agent[]   @relation("TeamMembers")
+}
+
+model Agent {
+  id           String   @id @default(uuid())
+  userId       String   @unique
+  brokerageId  String
+  teamId       String?
+  licenseNumber String?
+  mlsAgentId   String?
+  title        String?
+  phone        String?
+  bio          String?
+  commissionSplit Float? @default(70.0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  brokerage       Brokerage        @relation(fields: [brokerageId], references: [id], onDelete: Cascade)
+  team            Team?            @relation("TeamMembers", fields: [teamId], references: [id])
+  ledTeam         Team?            @relation("TeamLead")
+  contacts        Contact[]
+  tasks           Task[]
+  listedProperties Property[]
+  socialAccounts  SocialAccount[]
+}
+
+// ─── Contacts & Leads ──────────────────────────────────────────
+model Contact {
+  id            String    @id @default(uuid())
+  brokerageId   String
+  assignedAgentId String?
+  firstName     String
+  lastName      String
+  email         String?
+  phone         String?
+  phone2        String?
+  address       String?
+  city          String?
+  state         String?
+  zip           String?
+  source        String?   // referral, website, zillow, open house, etc.
+  tags          String    @default("[]") // JSON array of tags
+  notes         String?
+  isLead        Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  brokerage     Brokerage  @relation(fields: [brokerageId], references: [id], onDelete: Cascade)
+  assignedAgent Agent?     @relation(fields: [assignedAgentId], references: [id])
+  lead          Lead?
+  activities    Activity[]
+  communications Communication[]
+  tasks          Task[]          @relation("TaskContact")
+}
+
+model Lead {
+  id            String    @id @default(uuid())
+  contactId     String    @unique
+  pipelineId    String?
+  stageId       String?
+  status        String    @default("new") // new | active | hot | cold | closed_won | closed_lost
+  score         Int       @default(0)
+  budgetMin     Float?
+  budgetMax     Float?
+  propertyType  String?   // single_family, condo, multi_family, land, commercial
+  timeline      String?   // immediate, 1-3mo, 3-6mo, 6-12mo, 12mo+
+  preApproved   Boolean   @default(false)
+  lastContacted DateTime?
+  nextFollowUp  DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  contact       Contact       @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  pipeline      Pipeline?     @relation(fields: [pipelineId], references: [id])
+  stage         PipelineStage? @relation(fields: [stageId], references: [id])
+}
+
+// ─── Pipeline ──────────────────────────────────────────────────
+model Pipeline {
+  id          String   @id @default(uuid())
+  name        String
+  brokerageId String
+  isDefault   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  brokerage   Brokerage       @relation(fields: [brokerageId], references: [id], onDelete: Cascade)
+  stages      PipelineStage[]
+  leads       Lead[]
+}
+
+model PipelineStage {
+  id         String   @id @default(uuid())
+  pipelineId String
+  name       String   // New Lead, Contacted, Showing Scheduled, Offer Made, Negotiation, Closed
+  order      Int
+  color      String?  // hex color for kanban
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  pipeline   Pipeline @relation(fields: [pipelineId], references: [id], onDelete: Cascade)
+  leads      Lead[]
+}
+
+// ─── Properties (MLS-compliant) ────────────────────────────────
+model Property {
+  id              String    @id @default(uuid())
+  brokerageId     String
+  mlsNumber       String?   @unique
+  address         String
+  city            String
+  state           String
+  zip             String
+  propertyType    String    // single_family, condo, multi_family, land, commercial
+  listPrice       Float?
+  bedrooms        Int?
+  bathrooms       Float?
+  squareFeet      Int?
+  lotSize         Float?
+  yearBuilt       Int?
+  description     String?
+  status          String    @default("active") // active, pending, sold, off_market
+  listedDate      DateTime?
+  soldDate        DateTime?
+  soldPrice       Float?
+  listingAgentId  String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  brokerage       Brokerage @relation(fields: [brokerageId], references: [id], onDelete: Cascade)
+  listingAgent    Agent?    @relation(fields: [listingAgentId], references: [id])
+  images          PropertyImage[]
+}
+
+model PropertyImage {
+  id          String   @id @default(uuid())
+  propertyId  String
+  url         String
+  caption     String?
+  isPrimary   Boolean  @default(false)
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  property    Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+}
+
+// ─── Activities & Tasks ────────────────────────────────────────
+model Task {
+  id          String    @id @default(uuid())
+  agentId     String
+  contactId   String?
+  title       String
+  description String?
+  dueDate     DateTime?
+  priority    String    @default("medium") // low | medium | high | urgent
+  status      String    @default("pending") // pending | in_progress | completed | cancelled
+  type        String    @default("call") // call | email | meeting | showing | follow_up | other
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  agent       Agent     @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  contact     Contact?  @relation("TaskContact", fields: [contactId], references: [id])
+}
+
+model Activity {
+  id          String   @id @default(uuid())
+  contactId   String
+  type        String   // note, call, email, sms, meeting, showing, status_change
+  description String
+  metadata    String?  // JSON for extra context
+  createdAt   DateTime @default(now())
+
+  contact     Contact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
+}
+
+model Communication {
+  id          String   @id @default(uuid())
+  contactId   String
+  direction   String   @default("outbound") // inbound | outbound
+  channel     String   // sms | email | voice
+  subject     String?
+  body        String
+  status      String   @default("sent") // queued | sent | delivered | failed | received
+  metadata    String?  // JSON: delivery status, provider message ID, etc.
+  sentAt      DateTime @default(now())
+  deliveredAt DateTime?
+
+  contact     Contact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
+}
+
+// ─── Marketing Campaigns ───────────────────────────────────────
+model Campaign {
+  id          String   @id @default(uuid())
+  brokerageId String
+  name        String
+  description String?
+  type        String   @default("drip") // drip, blast, nurture, event
+  channel     String   @default("email") // email | sms | both
+  status      String   @default("draft") // draft | active | paused | completed
+  startDate   DateTime?
+  endDate     DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  brokerage   Brokerage  @relation(fields: [brokerageId], references: [id], onDelete: Cascade)
+  steps       CampaignStep[]
+}
+
+model CampaignStep {
+  id          String   @id @default(uuid())
+  campaignId  String
+  name        String
+  order       Int
+  delayHours  Int      @default(0) // hours to wait after previous step
+  channel     String   @default("email") // email | sms
+  subject     String?  // email subject
+  body        String   // template body
+  condition   String?  // JSON condition for branching (e.g., did they open previous email?)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  campaign    Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+}
+
+// ─── Social Media OAuth ────────────────────────────────────────
+model SocialAccount {
+  id          String   @id @default(uuid())
+  agentId     String
+  platform    String   // facebook, instagram, linkedin, youtube, google_business
+  accessToken String   // encrypted
+  refreshToken String?
+  expiresAt   DateTime?
+  pageId      String?
+  pageName    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  agent       Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+  @@unique([agentId, platform])
+}
+
+// ─── API Key Vault ─────────────────────────────────────────────
+model Workflow {
+  id               String   @id @default(uuid())
+  brokerageId      String
+  name             String
+  description      String?
+  triggerEvent     String
+  triggerCondition String?
+  actions          String
+  status           String   @default("active")
+  runCount         Int      @default(0)
+  lastRunAt        DateTime?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  brokerage        Brokerage @relation(fields: [brokerageId], references: [id], onDelete: Cascade)
 }
 
 model ApiKey {
   id        String   @id @default(uuid())
   provider  String   @unique
-  key       String
+  key       String   // AES-256-GCM encrypted
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

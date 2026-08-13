@@ -68,7 +68,7 @@ export const decrypt = (encryptedText: string): string => {
         const decrypted = decipher.update(encrypted) + decipher.final('utf8');
 
         return decrypted;
-    } catch (error) {
+    } catch {
         throw new Error('Decryption failed');
     }
 };

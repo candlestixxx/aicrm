@@ -3,6 +3,13 @@
 .env.local
 .env*.local
 .env*
+!.env.example
+
+# Local database (development)
+dev.db
+dev.db-journal
+dev.db-shm
+dev.db-wal
 
 # Dependencies
 node_modules/
