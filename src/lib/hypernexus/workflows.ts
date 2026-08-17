@@ -1,6 +1,39 @@
 import prisma from '@/lib/db/prisma';
 import { sendEmail } from '@/lib/mailer';
 import { hypernexusMemoryAdd } from '@/lib/hypernexus/client';
+import { decrypt } from '@/lib/encryption';
+import { createProviderClient, SYSTEM_PROMPTS } from '@/lib/llm/providers';
+
+/**
+ * Call an AI model using a key from the vault (prefers DeepSeek, then any).
+ */
+async function callLLM(prompt: string, system?: string): Promise<string | null> {
+  const keys = await prisma.apiKey.findMany({ select: { provider: true, key: true } });
+  if (keys.length === 0) return null;
+
+  const preference = ['DeepSeek', 'OpenAI', 'Anthropic', 'Google Gemini'];
+  const ordered = keys.sort(
+    (a, b) => preference.indexOf(a.provider) - preference.indexOf(b.provider)
+  );
+
+  for (const record of ordered) {
+    try {
+      const apiKey = decrypt(record.key);
+      const model = record.provider === 'DeepSeek' ? 'deepseek-chat' : undefined;
+      if (!model) continue; // skip providers we don't have a default model for
+      const client = createProviderClient(record.provider, model, apiKey);
+      const completion = await client.complete({
+        system: system || SYSTEM_PROMPTS.crm,
+        prompt,
+        maxTokens: 800,
+      });
+      return completion.text;
+    } catch {
+      continue;
+    }
+  }
+  return null;
+}
 
 /**
  * HyperNexus Workflow Engine
@@ -36,7 +69,10 @@ export interface WorkflowAction {
     | 'create_communication'
     | 'create_task'
     | 'add_activity'
-    | 'notify';
+    | 'notify'
+    | 'ai_draft'
+    | 'ai_analyze'
+    | 'negotiation_advisor';
   // update_lead_stage
   status?: string;
   stageId?: string;
@@ -51,6 +87,11 @@ export interface WorkflowAction {
   note?: string;
   // notify (email to agent)
   email?: string;
+  // ai_draft / ai_analyze / negotiation_advisor
+  prompt?: string;
+  purpose?: string;
+  recipientName?: string;
+  propertyInfo?: string;
 }
 
 interface WorkflowRecord {
@@ -170,6 +211,65 @@ async function executeAction(
         text: action.body || `A workflow was triggered in your CRM.`,
       });
       return `notification sent to ${action.email}`;
+    }
+
+    case 'ai_draft': {
+      const prompt =
+        action.prompt ||
+        `Draft a ${action.channel || 'email'} to ${action.recipientName || 'the lead'} about: ${action.purpose || 'following up'}.${action.propertyInfo ? ` Property: ${action.propertyInfo}.` : ''}`;
+      const draft = await callLLM(prompt);
+      if (!draft) return 'ai_draft: no AI key available';
+
+      // Store the draft as a queued communication
+      if (payload.contactId) {
+        await prisma.communication.create({
+          data: {
+            contactId: payload.contactId,
+            direction: 'outbound',
+            channel: action.channel || 'email',
+            subject: action.subject || null,
+            body: draft,
+            status: 'queued',
+          },
+        });
+      }
+      return `ai_draft: generated ${action.channel || 'email'} draft`;
+    }
+
+    case 'ai_analyze': {
+      const prompt = action.prompt || 'Analyze this CRM event and summarize next steps.';
+      const analysis = await callLLM(prompt);
+      if (!analysis) return 'ai_analyze: no AI key available';
+
+      if (payload.contactId) {
+        await prisma.activity.create({
+          data: {
+            contactId: payload.contactId,
+            type: 'note',
+            description: `AI analysis: ${analysis}`,
+          },
+        });
+      }
+      return 'ai_analyze: analysis logged';
+    }
+
+    case 'negotiation_advisor': {
+      const prompt =
+        action.prompt ||
+        `Act as a real estate negotiation advisor. Advise on: ${action.purpose || 'this negotiation'}.${action.propertyInfo ? ` Property: ${action.propertyInfo}.` : ''}`;
+      const advice = await callLLM(prompt);
+      if (!advice) return 'negotiation_advisor: no AI key available';
+
+      if (payload.contactId) {
+        await prisma.activity.create({
+          data: {
+            contactId: payload.contactId,
+            type: 'note',
+            description: `Negotiation advice: ${advice}`,
+          },
+        });
+      }
+      return 'negotiation_advisor: advice generated';
     }
 
     default:

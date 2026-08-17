@@ -2,6 +2,19 @@
 
 All notable changes to the AiCRM project will be documented in this file.
 
+## [0.8.0] — 2026-08-17
+
+### Added (AI-Powered with DeepSeek)
+- **DeepSeek key wired** — stored in the encrypted vault, router now makes real LLM calls (verified: drafted a follow-up email)
+- **3 AI workflow actions** — `ai_draft` (generate email/SMS), `ai_analyze` (analyze events), `negotiation_advisor` (expert negotiation advice)
+- **2 new NL commands** — `negotiate/advise` and `draft/write` in the HyperNexus console
+- **Workflow Builder UI** — new AI action options with purpose + custom prompt fields
+- **callLLM helper** — shared vault-key lookup (prefers DeepSeek) in both workflow engine and NL engine
+
+### Verified end-to-end
+- Lead replies "yes" → workflow → DeepSeek drafts a professional follow-up email → stored in CRM ✅
+- "advise should I counter at $450k or $460k" → returns expert negotiation strategy ✅
+
 ## [0.7.0] — 2026-08-13
 
 ### Added (HyperNexus Control Plane — full surface)

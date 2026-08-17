@@ -25,6 +25,10 @@ interface Workflow {
     body?: string;
     email?: string;
     subject?: string;
+    prompt?: string;
+    purpose?: string;
+    recipientName?: string;
+    propertyInfo?: string;
   }[];
   status: string;
   runCount: number;
@@ -39,6 +43,9 @@ const ACTION_TYPE_LABELS: Record<string, string> = {
   add_activity: 'Log activity',
   notify: 'Send notification',
   create_communication: 'Send communication',
+  ai_draft: '🤖 AI — draft email/SMS',
+  ai_analyze: '🤖 AI — analyze',
+  negotiation_advisor: '🤖 AI — negotiation advisor',
 };
 
 export default function WorkflowBuilder() {
@@ -62,6 +69,8 @@ export default function WorkflowBuilder() {
     actionNote: '',
     actionEmail: '',
     actionBody: '',
+    actionPrompt: '',
+    actionPurpose: '',
   });
 
   const workflows = data?.workflows ?? [];
@@ -104,6 +113,21 @@ export default function WorkflowBuilder() {
           { type: 'create_communication', channel: 'email', body: form.actionBody || 'Message' },
         ];
         break;
+      case 'ai_draft':
+        actions = [
+          { type: 'ai_draft', channel: 'email', purpose: form.actionPurpose || form.actionBody || 'follow up', prompt: form.actionPrompt || undefined },
+        ];
+        break;
+      case 'ai_analyze':
+        actions = [
+          { type: 'ai_analyze', prompt: form.actionPrompt || form.actionBody || undefined },
+        ];
+        break;
+      case 'negotiation_advisor':
+        actions = [
+          { type: 'negotiation_advisor', purpose: form.actionPurpose || form.actionBody || 'this offer', prompt: form.actionPrompt || undefined },
+        ];
+        break;
     }
 
     try {
@@ -123,7 +147,7 @@ export default function WorkflowBuilder() {
         name: '', description: '', triggerEvent: 'communication_received',
         conditionField: 'body', conditionOperator: 'contains', conditionValue: 'yes',
         actionType: 'update_lead_stage', actionStatus: 'hot', actionTitle: '',
-        actionNote: '', actionEmail: '', actionBody: '',
+        actionNote: '', actionEmail: '', actionBody: '', actionPrompt: '', actionPurpose: '',
       });
       mutate();
     } catch (err) {
@@ -243,6 +267,9 @@ export default function WorkflowBuilder() {
                   <option value="add_activity">Log activity</option>
                   <option value="create_communication">Send communication</option>
                   <option value="notify">Notify (email)</option>
+                  <option value="ai_draft">🤖 AI — draft email/SMS</option>
+                  <option value="ai_analyze">🤖 AI — analyze</option>
+                  <option value="negotiation_advisor">🤖 AI — negotiation advisor</option>
                 </select>
 
                 {form.actionType === 'update_lead_stage' && (
@@ -299,6 +326,31 @@ export default function WorkflowBuilder() {
                       className="px-3 py-2 border border-gray-300 rounded-lg text-sm flex-1"
                     />
                   </>
+                )}
+
+                {(form.actionType === 'ai_draft' ||
+                  form.actionType === 'ai_analyze' ||
+                  form.actionType === 'negotiation_advisor') && (
+                  <div className="w-full space-y-2">
+                    <input
+                      type="text"
+                      placeholder={
+                        form.actionType === 'negotiation_advisor'
+                          ? 'Advise on (e.g., counter at $450k or $460k?)'
+                          : 'Purpose (e.g., follow up after showing)'
+                      }
+                      value={form.actionPurpose}
+                      onChange={(e) => setForm({ ...form, actionPurpose: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Custom prompt (optional — overrides the default)"
+                      value={form.actionPrompt}
+                      onChange={(e) => setForm({ ...form, actionPrompt: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                    />
+                  </div>
                 )}
               </div>
             </div>

@@ -2,6 +2,26 @@ import prisma from '@/lib/db/prisma';
 import { createProviderClient, SYSTEM_PROMPTS } from '@/lib/llm/providers';
 import { decrypt } from '@/lib/encryption';
 
+/** Call an AI model using a key from the vault (prefers DeepSeek). */
+async function callLLM(prompt: string, system?: string): Promise<string | null> {
+  const keys = await prisma.apiKey.findMany({ select: { provider: true, key: true } });
+  const preference = ['DeepSeek', 'OpenAI', 'Anthropic', 'Google Gemini'];
+  const ordered = keys.sort(
+    (a, b) => preference.indexOf(a.provider) - preference.indexOf(b.provider)
+  );
+  for (const record of ordered) {
+    try {
+      const model = record.provider === 'DeepSeek' ? 'deepseek-chat' : undefined;
+      if (!model) continue;
+      const client = createProviderClient(record.provider, model, decrypt(record.key));
+      return (await client.complete({ system: system || SYSTEM_PROMPTS.crm, prompt })).text;
+    } catch {
+      continue;
+    }
+  }
+  return null;
+}
+
 /**
  * HyperNexus Workflow Engine
  *
@@ -227,6 +247,35 @@ const getContact: ActionExecutor = async (ctx, params) => {
   };
 };
 
+const negotiate: ActionExecutor = async (ctx, params) => {
+  const topic = params['topic'] || params['about'] || 'this offer';
+  const advice = await callLLM(
+    `Act as an expert real estate negotiation advisor. Give concrete, actionable advice on: ${topic}. Keep it under 200 words.`
+  );
+  if (!advice) {
+    return { success: false, message: 'No AI key configured. Add one in AI Models to use the negotiation advisor.' };
+  }
+  if (ctx.agentId) {
+    // store as a task note for the agent
+    await prisma.task.create({
+      data: { agentId: ctx.agentId, title: `Negotiation advice: ${topic.slice(0, 50)}`, type: 'other', description: advice },
+    });
+  }
+  return { success: true, message: advice };
+};
+
+const draftContent: ActionExecutor = async (ctx, params) => {
+  const kind = params['kind'] || params['channel'] || 'email';
+  const topic = params['topic'] || params['about'] || 'follow up';
+  const draft = await callLLM(
+    `Draft a professional ${kind} for a real estate client about: ${topic}. Keep it concise and warm.`
+  );
+  if (!draft) {
+    return { success: false, message: 'No AI key configured. Add one in AI Models to use drafting.' };
+  }
+  return { success: true, message: draft };
+};
+
 const sendCommunication: ActionExecutor = async (ctx, params) => {
   const contactId = params['contact'];
   const body = params['body'] || params['message'];
@@ -329,6 +378,21 @@ export const INTENT_RULES: IntentRule[] = [
       /lookup\s+(?:contact\s+)?(?<id>\S+)/i,
     ],
     execute: getContact,
+  },
+  {
+    intent: 'negotiate',
+    patterns: [
+      /(?:advise|negotiate|should\s+i\s+counter|what\s+should\s+i\s+offer)(?:\s+on)?\s+(?<topic>.+)/i,
+      /negotiation\s+(?:advice|advisor)\s+(?:for|on)\s+(?<topic>.+)/i,
+    ],
+    execute: negotiate,
+  },
+  {
+    intent: 'draft',
+    patterns: [
+      /(?:draft|write|compose)\s+(?:an?\s+)?(?<kind>email|sms|text|message|letter)\s+(?:to\s+\S+\s+)?(?:about|for|saying)\s+(?<topic>.+)/i,
+    ],
+    execute: draftContent,
   },
 ];
 

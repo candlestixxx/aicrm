@@ -15,7 +15,7 @@ const TIER_1_MODELS = [
 const TIER_2_MODELS = [
   { provider: 'OpenAI', model: 'gpt-4o', costPer1k: 0.005 },
   { provider: 'Anthropic', model: 'claude-3-5-sonnet', costPer1k: 0.003 },
-  { provider: 'DeepSeek', model: 'deepseek-v3', costPer1k: 0.001 },
+  { provider: 'DeepSeek', model: 'deepseek-chat', costPer1k: 0.001 },
 ];
 
 // Local orchestrators (not called via HTTP — handled separately)

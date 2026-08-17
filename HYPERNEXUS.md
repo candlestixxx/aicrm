@@ -30,6 +30,8 @@ Open the **HyperNexus** tab in the sidebar and type a command into the console.
 | `mark lead [name] as closed won` | Alternative status phrasing |
 | `send email to [name] saying [message]` | Queues a communication |
 | `send sms to [name] saying [message]` | Queues an SMS |
+| `draft an email about [topic]` | AI-drafts a professional email |
+| `advise / negotiate on [topic]` | AI negotiation advisor |
 
 ### Status values
 `new` · `active` · `hot` · `cold` · `closed_won` · `closed_lost`
@@ -82,6 +84,9 @@ Workflows run automatically when a CRM event happens. Build them in the **HyperN
 | Log activity | Adds a note to the contact timeline |
 | Send communication | Queues an email/SMS |
 | Notify | Sends an email notification |
+| 🤖 AI — draft email/SMS | AI generates a follow-up draft and queues it |
+| 🤖 AI — analyze | AI analyzes the event and logs insights |
+| 🤖 AI — negotiation advisor | AI gives expert negotiation strategy |
 
 ### Example workflow
 
@@ -226,7 +231,7 @@ After restarting, ask Claude things like:
 No. HyperNexus is built into this CRM (the `/api/mcp` endpoint and the workflow engine). External agents connect to it via MCP — the open standard you can learn about at modelcontextprotocol.io.
 
 **Do I need API keys for HyperNexus commands?**
-Basic commands (list, summarize, create task, update lead) work without any AI keys — they're deterministic database actions. Unknown commands that need AI interpretation require keys in the *AI Models* tab.
+Basic commands (list, summarize, create task, update lead) work without any AI keys — they're deterministic database actions. The AI-powered commands (`draft`, `advise/negotiate`) and AI workflow actions require a key in the *AI Models* tab (DeepSeek, OpenAI, Anthropic, or Gemini).
 
 **Can I connect more than one AI agent?**
 Yes. Any MCP-compatible client can connect to `/api/mcp` with the same token, or use its own session cookie.
