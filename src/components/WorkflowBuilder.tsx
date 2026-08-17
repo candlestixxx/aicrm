@@ -56,99 +56,56 @@ export default function WorkflowBuilder() {
 
   const [showForm, setShowForm] = useState(false);
   const [expanded, setExpanded] = useState<string | null>(null);
-  const [form, setForm] = useState({
-    name: '',
-    description: '',
-    triggerEvent: 'communication_received',
-    conditionField: 'body',
-    conditionOperator: 'contains',
-    conditionValue: 'yes',
-    actionType: 'update_lead_stage',
-    actionStatus: 'hot',
-    actionTitle: '',
-    actionNote: '',
-    actionEmail: '',
-    actionBody: '',
-    actionPrompt: '',
-    actionPurpose: '',
-  });
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [triggerEvent, setTriggerEvent] = useState('communication_received');
+  const [conditionField, setConditionField] = useState('body');
+  const [conditionOperator, setConditionOperator] = useState('contains');
+  const [conditionValue, setConditionValue] = useState('yes');
+  const [actions, setActions] = useState<Workflow['actions']>([
+    { type: 'update_lead_stage', status: 'hot' },
+  ]);
 
   const workflows = data?.workflows ?? [];
   const triggerEvents = data?.triggerEvents ?? [];
 
+  const updateAction = (index: number, patch: Partial<Workflow['actions'][number]>) => {
+    setActions((prev) =>
+      prev.map((a, i) => (i === index ? { ...a, ...patch } : a))
+    );
+  };
+
+  const addAction = () => setActions((prev) => [...prev, { type: 'create_task', title: '' }]);
+  const removeAction = (index: number) =>
+    setActions((prev) => prev.filter((_, i) => i !== index));
+
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const triggerCondition = form.conditionValue
-      ? {
-          field: form.conditionField,
-          operator: form.conditionOperator,
-          value: form.conditionValue,
-        }
+    const triggerCondition = conditionValue
+      ? { field: conditionField, operator: conditionOperator, value: conditionValue }
       : null;
-
-    let actions: Workflow['actions'] = [];
-    switch (form.actionType) {
-      case 'update_lead_stage':
-        actions = [{ type: 'update_lead_stage', status: form.actionStatus }];
-        break;
-      case 'create_task':
-        actions = [{ type: 'create_task', title: form.actionTitle || 'Follow-up task' }];
-        break;
-      case 'add_activity':
-        actions = [{ type: 'add_activity', note: form.actionNote || 'Workflow triggered' }];
-        break;
-      case 'notify':
-        actions = [
-          {
-            type: 'notify',
-            email: form.actionEmail,
-            subject: `HyperNexus: ${form.name}`,
-            body: form.actionBody || 'A workflow was triggered.',
-          },
-        ];
-        break;
-      case 'create_communication':
-        actions = [
-          { type: 'create_communication', channel: 'email', body: form.actionBody || 'Message' },
-        ];
-        break;
-      case 'ai_draft':
-        actions = [
-          { type: 'ai_draft', channel: 'email', purpose: form.actionPurpose || form.actionBody || 'follow up', prompt: form.actionPrompt || undefined },
-        ];
-        break;
-      case 'ai_analyze':
-        actions = [
-          { type: 'ai_analyze', prompt: form.actionPrompt || form.actionBody || undefined },
-        ];
-        break;
-      case 'negotiation_advisor':
-        actions = [
-          { type: 'negotiation_advisor', purpose: form.actionPurpose || form.actionBody || 'this offer', prompt: form.actionPrompt || undefined },
-        ];
-        break;
-    }
 
     try {
       await fetch('/api/hypernexus/workflows', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: form.name,
-          description: form.description,
-          triggerEvent: form.triggerEvent,
+          name,
+          description,
+          triggerEvent,
           triggerCondition,
           actions,
         }),
       });
       setShowForm(false);
-      setForm({
-        name: '', description: '', triggerEvent: 'communication_received',
-        conditionField: 'body', conditionOperator: 'contains', conditionValue: 'yes',
-        actionType: 'update_lead_stage', actionStatus: 'hot', actionTitle: '',
-        actionNote: '', actionEmail: '', actionBody: '', actionPrompt: '', actionPurpose: '',
-      });
+      setName('');
+      setDescription('');
+      setTriggerEvent('communication_received');
+      setConditionField('body');
+      setConditionOperator('contains');
+      setConditionValue('yes');
+      setActions([{ type: 'update_lead_stage', status: 'hot' }]);
       mutate();
     } catch (err) {
       console.error('Failed to create workflow', err);
@@ -203,14 +160,14 @@ export default function WorkflowBuilder() {
               <input
                 type="text"
                 placeholder="Workflow name (e.g., 'Hot lead on reply')"
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
                 required
               />
               <select
-                value={form.triggerEvent}
-                onChange={(e) => setForm({ ...form, triggerEvent: e.target.value })}
+                value={triggerEvent}
+                onChange={(e) => setTriggerEvent(e.target.value)}
                 className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
               >
                 {triggerEvents.map((t) => (
@@ -226,13 +183,13 @@ export default function WorkflowBuilder() {
                 <input
                   type="text"
                   placeholder="Field (e.g., body)"
-                  value={form.conditionField}
-                  onChange={(e) => setForm({ ...form, conditionField: e.target.value })}
+                  value={conditionField}
+                  onChange={(e) => setConditionField(e.target.value)}
                   className="px-3 py-2 border border-gray-300 rounded-lg text-sm flex-1 min-w-[100px]"
                 />
                 <select
-                  value={form.conditionOperator}
-                  onChange={(e) => setForm({ ...form, conditionOperator: e.target.value })}
+                  value={conditionOperator}
+                  onChange={(e) => setConditionOperator(e.target.value)}
                   className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
                 >
                   <option value="contains">contains</option>
@@ -243,8 +200,8 @@ export default function WorkflowBuilder() {
                 <input
                   type="text"
                   placeholder="Value (e.g., yes)"
-                  value={form.conditionValue}
-                  onChange={(e) => setForm({ ...form, conditionValue: e.target.value })}
+                  value={conditionValue}
+                  onChange={(e) => setConditionValue(e.target.value)}
                   className="px-3 py-2 border border-gray-300 rounded-lg text-sm flex-1 min-w-[100px]"
                 />
               </div>
@@ -253,106 +210,136 @@ export default function WorkflowBuilder() {
               </p>
             </div>
 
-            {/* Action */}
-            <div className="bg-purple-50 rounded-lg p-3 space-y-2">
-              <p className="text-xs font-medium text-purple-600">THEN (action)</p>
-              <div className="flex gap-2 flex-wrap">
-                <select
-                  value={form.actionType}
-                  onChange={(e) => setForm({ ...form, actionType: e.target.value })}
-                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+            {/* Multi-step actions */}
+            <div className="bg-purple-50 rounded-lg p-3 space-y-3">
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-medium text-purple-600">
+                  THEN (actions — run in order)
+                </p>
+                <button
+                  type="button"
+                  onClick={addAction}
+                  className="text-xs text-purple-700 hover:underline font-medium"
                 >
-                  <option value="update_lead_stage">Update lead stage</option>
-                  <option value="create_task">Create task</option>
-                  <option value="add_activity">Log activity</option>
-                  <option value="create_communication">Send communication</option>
-                  <option value="notify">Notify (email)</option>
-                  <option value="ai_draft">🤖 AI — draft email/SMS</option>
-                  <option value="ai_analyze">🤖 AI — analyze</option>
-                  <option value="negotiation_advisor">🤖 AI — negotiation advisor</option>
-                </select>
-
-                {form.actionType === 'update_lead_stage' && (
-                  <select
-                    value={form.actionStatus}
-                    onChange={(e) => setForm({ ...form, actionStatus: e.target.value })}
-                    className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                  >
-                    <option value="hot">Hot</option>
-                    <option value="active">Active</option>
-                    <option value="new">New</option>
-                    <option value="cold">Cold</option>
-                    <option value="closed_won">Closed Won</option>
-                    <option value="closed_lost">Closed Lost</option>
-                  </select>
-                )}
-
-                {form.actionType === 'create_task' && (
-                  <input
-                    type="text"
-                    placeholder="Task title"
-                    value={form.actionTitle}
-                    onChange={(e) => setForm({ ...form, actionTitle: e.target.value })}
-                    className="px-3 py-2 border border-gray-300 rounded-lg text-sm flex-1"
-                  />
-                )}
-
-                {form.actionType === 'add_activity' && (
-                  <input
-                    type="text"
-                    placeholder="Activity note"
-                    value={form.actionNote}
-                    onChange={(e) => setForm({ ...form, actionNote: e.target.value })}
-                    className="px-3 py-2 border border-gray-300 rounded-lg text-sm flex-1"
-                  />
-                )}
-
-                {(form.actionType === 'notify' || form.actionType === 'create_communication') && (
-                  <>
-                    {form.actionType === 'notify' && (
-                      <input
-                        type="email"
-                        placeholder="Notify email"
-                        value={form.actionEmail}
-                        onChange={(e) => setForm({ ...form, actionEmail: e.target.value })}
-                        className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                      />
-                    )}
-                    <input
-                      type="text"
-                      placeholder="Message body"
-                      value={form.actionBody}
-                      onChange={(e) => setForm({ ...form, actionBody: e.target.value })}
-                      className="px-3 py-2 border border-gray-300 rounded-lg text-sm flex-1"
-                    />
-                  </>
-                )}
-
-                {(form.actionType === 'ai_draft' ||
-                  form.actionType === 'ai_analyze' ||
-                  form.actionType === 'negotiation_advisor') && (
-                  <div className="w-full space-y-2">
-                    <input
-                      type="text"
-                      placeholder={
-                        form.actionType === 'negotiation_advisor'
-                          ? 'Advise on (e.g., counter at $450k or $460k?)'
-                          : 'Purpose (e.g., follow up after showing)'
-                      }
-                      value={form.actionPurpose}
-                      onChange={(e) => setForm({ ...form, actionPurpose: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                    />
-                    <input
-                      type="text"
-                      placeholder="Custom prompt (optional — overrides the default)"
-                      value={form.actionPrompt}
-                      onChange={(e) => setForm({ ...form, actionPrompt: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                    />
-                  </div>
-                )}
+                  + Add step
+                </button>
               </div>
+
+              {actions.map((action, index) => (
+                <div
+                  key={index}
+                  className="space-y-2 border-t border-purple-200 pt-3 first:border-0 first:pt-0"
+                >
+                  <div className="flex gap-2 items-center">
+                    <span className="text-xs font-bold text-purple-400 w-14">Step {index + 1}</span>
+                    <select
+                      value={action.type}
+                      onChange={(e) => updateAction(index, { type: e.target.value })}
+                      className="px-3 py-2 border border-gray-300 rounded-lg text-sm flex-1"
+                    >
+                      <option value="update_lead_stage">Update lead stage</option>
+                      <option value="create_task">Create task</option>
+                      <option value="add_activity">Log activity</option>
+                      <option value="create_communication">Send communication</option>
+                      <option value="notify">Notify (email)</option>
+                      <option value="ai_draft">🤖 AI — draft email/SMS</option>
+                      <option value="ai_analyze">🤖 AI — analyze</option>
+                      <option value="negotiation_advisor">🤖 AI — negotiation advisor</option>
+                    </select>
+                    {actions.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeAction(index)}
+                        className="px-2 text-red-400 hover:text-red-600 text-sm"
+                        title="Remove step"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+
+                  {action.type === 'update_lead_stage' && (
+                    <select
+                      value={action.status || 'hot'}
+                      onChange={(e) => updateAction(index, { status: e.target.value })}
+                      className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                    >
+                      <option value="hot">Hot</option>
+                      <option value="active">Active</option>
+                      <option value="new">New</option>
+                      <option value="cold">Cold</option>
+                      <option value="closed_won">Closed Won</option>
+                      <option value="closed_lost">Closed Lost</option>
+                    </select>
+                  )}
+
+                  {action.type === 'create_task' && (
+                    <input
+                      type="text"
+                      placeholder="Task title"
+                      value={action.title || ''}
+                      onChange={(e) => updateAction(index, { title: e.target.value })}
+                      className="px-3 py-2 border border-gray-300 rounded-lg text-sm w-full"
+                    />
+                  )}
+
+                  {action.type === 'add_activity' && (
+                    <input
+                      type="text"
+                      placeholder="Activity note"
+                      value={action.note || ''}
+                      onChange={(e) => updateAction(index, { note: e.target.value })}
+                      className="px-3 py-2 border border-gray-300 rounded-lg text-sm w-full"
+                    />
+                  )}
+
+                  {(action.type === 'notify' || action.type === 'create_communication') && (
+                    <div className="space-y-2">
+                      {action.type === 'notify' && (
+                        <input
+                          type="email"
+                          placeholder="Notify email"
+                          value={action.email || ''}
+                          onChange={(e) => updateAction(index, { email: e.target.value })}
+                          className="px-3 py-2 border border-gray-300 rounded-lg text-sm w-full"
+                        />
+                      )}
+                      <input
+                        type="text"
+                        placeholder="Message body"
+                        value={action.body || ''}
+                        onChange={(e) => updateAction(index, { body: e.target.value })}
+                        className="px-3 py-2 border border-gray-300 rounded-lg text-sm w-full"
+                      />
+                    </div>
+                  )}
+
+                  {(action.type === 'ai_draft' ||
+                    action.type === 'ai_analyze' ||
+                    action.type === 'negotiation_advisor') && (
+                    <div className="space-y-2">
+                      <input
+                        type="text"
+                        placeholder={
+                          action.type === 'negotiation_advisor'
+                            ? 'Advise on (e.g., counter at $450k or $460k?)'
+                            : 'Purpose (e.g., follow up after showing)'
+                        }
+                        value={action.purpose || ''}
+                        onChange={(e) => updateAction(index, { purpose: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Custom prompt (optional — overrides the default)"
+                        value={action.prompt || ''}
+                        onChange={(e) => updateAction(index, { prompt: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                      />
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
 
             <div className="flex gap-2 justify-end">

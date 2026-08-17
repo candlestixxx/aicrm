@@ -78,6 +78,7 @@ model Brokerage {
   pipelines   Pipeline[]
   campaigns   Campaign[]
   workflows   Workflow[]
+  secrets     Secret[]
 }
 
 model Team {
@@ -334,6 +335,21 @@ model SocialAccount {
 }
 
 // ─── API Key Vault ─────────────────────────────────────────────
+model Secret {
+  id          String   @id @default(uuid())
+  brokerageId String
+  category    String
+  label       String
+  value       String
+  metadata    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  brokerage   Brokerage @relation(fields: [brokerageId], references: [id], onDelete: Cascade)
+
+  @@index([brokerageId, category])
+}
+
 model Workflow {
   id               String   @id @default(uuid())
   brokerageId      String

@@ -6,7 +6,7 @@ import useSWR from 'swr';
 import {
   Users, Building2, TrendingUp, Calendar, Settings,
   LogOut, Menu, X, Home, BarChart3, CheckSquare,
-  Megaphone, Sparkles,
+  Megaphone, Sparkles, ShieldCheck,
 } from 'lucide-react';
 import ContactList from '@/components/ContactList';
 import ModelManager from '@/components/ModelManager';
@@ -21,6 +21,7 @@ import WorkflowBuilder from '@/components/WorkflowBuilder';
 import ToolCatalog from '@/components/ToolCatalog';
 import SwarmConsole from '@/components/SwarmConsole';
 import HyperNexusDashboard from '@/components/HyperNexusDashboard';
+import Vault from '@/components/Vault';
 
 type Tab =
   | 'dashboard'
@@ -32,6 +33,7 @@ type Tab =
   | 'team'
   | 'hypernexus'
   | 'models'
+  | 'vault'
   | 'settings';
 
 interface SessionUser {
@@ -80,6 +82,7 @@ export default function DashboardPage() {
     { key: 'campaigns', label: 'Campaigns', icon: <Megaphone className="w-5 h-5" /> },
     { key: 'team', label: 'Team', icon: <Users className="w-5 h-5" /> },
     { key: 'models', label: 'AI Models', icon: <BarChart3 className="w-5 h-5" /> },
+    { key: 'vault', label: 'Vault', icon: <ShieldCheck className="w-5 h-5" /> },
     { key: 'settings', label: 'Settings', icon: <Settings className="w-5 h-5" /> },
   ];
 
@@ -283,6 +286,8 @@ export default function DashboardPage() {
           {activeTab === 'team' && <TeamManager />}
 
           {activeTab === 'models' && <ModelManager />}
+
+          {activeTab === 'vault' && <Vault />}
 
           {activeTab === 'settings' && (
             <div className="bg-white rounded-xl border border-gray-200 p-6">

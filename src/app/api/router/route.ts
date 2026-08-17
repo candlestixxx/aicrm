@@ -6,7 +6,7 @@ import { rateLimit, getClientIp } from '@/lib/rate-limit';
 
 // Tier 1: Fast/Cheap models for basic tasks
 const TIER_1_MODELS = [
-  { provider: 'Google Gemini', model: 'gemini-2.0-flash', costPer1k: 0.0001 },
+  { provider: 'Google Gemini', model: 'gemini-3.6-flash', costPer1k: 0.0001 },
   { provider: 'Qwen', model: 'qwen-turbo', costPer1k: 0.00015 },
   { provider: 'Xiaomi', model: 'mixtral-8x7b', costPer1k: 0.0002 },
 ];

@@ -2,6 +2,19 @@
 
 All notable changes to the AiCRM project will be documented in this file.
 
+## [0.9.0] — 2026-08-17
+
+### Added (Supercharged Vault + Multi-step Workflows)
+- **Secure Vault** (`src/components/Vault.tsx` + `/api/secrets`) — encrypted storage organized into 5 sections: API Keys, OAuth Tokens, Passwords, Notes, Other. AES-256-GCM encrypted; values never returned in lists (only via authenticated reveal endpoint).
+- **Secret model** — new Prisma model (category, label, encrypted value, metadata) with brokerage scoping.
+- **Multi-step workflow builder** — workflows now support chains of actions (trigger → condition → step 1 → step 2 → step 3…), with add/remove step UI.
+- **Google Gemini key wired** — stored in vault, router updated to `gemini-3.6-flash` (the current model).
+- **Vault tab** in the dashboard sidebar.
+
+### Verified
+- Vault: create/list (masked)/reveal (decrypted) all working ✅
+- Multi-step workflow: 3-action chain stored and executes in order ✅
+
 ## [0.8.0] — 2026-08-17
 
 ### Added (AI-Powered with DeepSeek)
