@@ -143,7 +143,7 @@ export default function Vault() {
             className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm border transition ${
               activeCategory === cat.value
                 ? 'border-emerald-600 bg-emerald-50 text-emerald-700 font-medium'
-                : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
+                : 'border-gray-200 bg-surface text-gray-600 hover:bg-gray-50'
             }`}
           >
             {CATEGORY_ICONS[cat.value]}
@@ -158,7 +158,7 @@ export default function Vault() {
       {/* Add modal */}
       {showAdd && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6 space-y-4">
+          <div className="bg-surface rounded-xl shadow-xl w-full max-w-md p-6 space-y-4">
             <div className="flex justify-between items-center">
               <h3 className="font-bold text-lg">
                 Add to {categories.find((c) => c.value === activeCategory)?.label}
@@ -232,7 +232,7 @@ export default function Vault() {
       {isLoading ? (
         <div className="text-center text-gray-400 py-8">Loading vault...</div>
       ) : secrets.length === 0 ? (
-        <div className="bg-white border border-gray-200 rounded-xl p-8 text-center text-gray-400 text-sm">
+        <div className="bg-surface border border-gray-200 rounded-xl p-8 text-center text-gray-400 text-sm">
           No secrets in this section. Click &quot;Add Secret&quot; to store one securely.
         </div>
       ) : (
@@ -240,7 +240,7 @@ export default function Vault() {
           {secrets.map((secret) => (
             <div
               key={secret.id}
-              className="bg-white border border-gray-200 rounded-xl p-4 flex items-center justify-between gap-3"
+              className="bg-surface border border-gray-200 rounded-xl p-4 flex items-center justify-between gap-3"
             >
               <div className="flex items-center gap-3 min-w-0">
                 <span className={`p-2 rounded-lg border ${CATEGORY_COLORS[secret.category] || CATEGORY_COLORS.other}`}>
@@ -281,7 +281,7 @@ export default function Vault() {
                 </button>
                 <button
                   onClick={() => handleDelete(secret.id)}
-                  className="p-2 text-gray-300 hover:text-red-500"
+                  className="p-2 text-gray-400 hover:text-red-500"
                   title="Delete"
                 >
                   <Trash2 className="w-4 h-4" />

@@ -116,7 +116,7 @@ export default function SwarmConsole() {
       </form>
 
       {result && (
-        <div className="bg-gray-900 rounded-lg p-3 font-mono text-xs text-green-300 overflow-auto max-h-64 whitespace-pre-wrap">
+        <div className="bg-zinc-900 rounded-lg p-3 font-mono text-xs text-green-300 overflow-auto max-h-64 whitespace-pre-wrap">
           {result}
         </div>
       )}
@@ -127,7 +127,7 @@ export default function SwarmConsole() {
             Missions ({missions.length})
           </p>
           {missions.map((m, i) => (
-            <div key={i} className="bg-white border border-gray-200 rounded-lg p-3 text-sm">
+            <div key={i} className="bg-surface border border-gray-200 rounded-lg p-3 text-sm">
               <span className="font-medium text-gray-900">{m.missionId}</span>
               <span className="ml-2 text-xs text-gray-500">{m.status}</span>
             </div>

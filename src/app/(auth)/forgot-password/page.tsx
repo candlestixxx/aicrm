@@ -44,7 +44,7 @@ export default function ForgotPasswordPage() {
 
         <form
           onSubmit={handleSubmit}
-          className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 space-y-4"
+          className="bg-surface rounded-xl shadow-sm border border-gray-200 p-6 space-y-4"
         >
           {message && (
             <div className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-lg text-sm">

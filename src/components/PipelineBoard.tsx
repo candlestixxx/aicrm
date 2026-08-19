@@ -46,7 +46,7 @@ export default function PipelineBoard() {
 
   if (isLoading || !data) {
     return (
-      <div className="bg-white rounded-xl border border-gray-200 p-12 text-center text-gray-400">
+      <div className="bg-surface rounded-xl border border-gray-200 p-12 text-center text-gray-400">
         Loading pipeline...
       </div>
     );
@@ -56,7 +56,7 @@ export default function PipelineBoard() {
 
   if (!pipeline || stages.length === 0) {
     return (
-      <div className="bg-white rounded-xl border border-gray-200 p-12 text-center text-gray-400">
+      <div className="bg-surface rounded-xl border border-gray-200 p-12 text-center text-gray-400">
         No pipeline configured. Create one in Settings.
       </div>
     );
@@ -128,7 +128,7 @@ export default function PipelineBoard() {
                     draggable
                     onDragStart={() => setDraggedLead(lead.id)}
                     onDragEnd={() => setDraggedLead(null)}
-                    className={`bg-white rounded-lg border border-gray-200 p-3 shadow-sm cursor-grab hover:shadow-md transition ${
+                    className={`bg-surface rounded-lg border border-gray-200 p-3 shadow-sm cursor-grab hover:shadow-md transition ${
                       draggedLead === lead.id ? 'opacity-50' : ''
                     }`}
                   >

@@ -105,7 +105,7 @@ export default function TaskManager() {
       </div>
 
       {showForm && (
-        <div className="bg-white border border-gray-200 rounded-xl p-4">
+        <div className="bg-surface border border-gray-200 rounded-xl p-4">
           <form onSubmit={handleCreate} className="space-y-3">
             <input
               type="text"
@@ -186,7 +186,7 @@ export default function TaskManager() {
       ) : (
         <div className="space-y-2">
           {pendingTasks.length === 0 && completedTasks.length === 0 ? (
-            <div className="bg-white rounded-xl border border-gray-200 p-8 text-center text-gray-400">
+            <div className="bg-surface rounded-xl border border-gray-200 p-8 text-center text-gray-400">
               No tasks yet. Create your first task to stay on top of follow-ups.
             </div>
           ) : (
@@ -194,7 +194,7 @@ export default function TaskManager() {
               {pendingTasks.map((task) => (
                 <div
                   key={task.id}
-                  className="bg-white border border-gray-200 rounded-lg p-4 flex items-center justify-between gap-3 hover:bg-gray-50"
+                  className="bg-surface border border-gray-200 rounded-lg p-4 flex items-center justify-between gap-3 hover:bg-gray-50"
                 >
                   <div className="flex items-start gap-3">
                     <button
@@ -230,7 +230,7 @@ export default function TaskManager() {
                   </div>
                   <button
                     onClick={() => handleDelete(task.id)}
-                    className="text-gray-300 hover:text-red-500"
+                    className="text-gray-400 hover:text-red-500"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -260,7 +260,7 @@ export default function TaskManager() {
                         </div>
                         <button
                           onClick={() => handleDelete(task.id)}
-                          className="text-gray-300 hover:text-red-500"
+                          className="text-gray-400 hover:text-red-500"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>

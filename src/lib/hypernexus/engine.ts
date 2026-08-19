@@ -1,25 +1,9 @@
 import prisma from '@/lib/db/prisma';
-import { createProviderClient, SYSTEM_PROMPTS } from '@/lib/llm/providers';
-import { decrypt } from '@/lib/encryption';
+import { getAIEngine } from '@/lib/ai/engine';
 
-/** Call an AI model using a key from the vault (prefers DeepSeek). */
+/** Call the configured AI engine (native by default, or control-plane/hybrid). */
 async function callLLM(prompt: string, system?: string): Promise<string | null> {
-  const keys = await prisma.apiKey.findMany({ select: { provider: true, key: true } });
-  const preference = ['DeepSeek', 'OpenAI', 'Anthropic', 'Google Gemini'];
-  const ordered = keys.sort(
-    (a, b) => preference.indexOf(a.provider) - preference.indexOf(b.provider)
-  );
-  for (const record of ordered) {
-    try {
-      const model = record.provider === 'DeepSeek' ? 'deepseek-chat' : undefined;
-      if (!model) continue;
-      const client = createProviderClient(record.provider, model, decrypt(record.key));
-      return (await client.complete({ system: system || SYSTEM_PROMPTS.crm, prompt })).text;
-    } catch {
-      continue;
-    }
-  }
-  return null;
+  return getAIEngine().complete(prompt, system);
 }
 
 /**
@@ -454,46 +438,21 @@ export async function executeCommand(
 async function interpretWithLLM(
   command: string
 ): Promise<HyperNexusResult | null> {
-  // Find an available frontier model
-  const frontier = [
-    { provider: 'OpenAI', model: 'gpt-4o' },
-    { provider: 'Anthropic', model: 'claude-3-5-sonnet' },
-    { provider: 'DeepSeek', model: 'deepseek-v3' },
-  ];
+  try {
+    const completion = await callLLM(
+      command,
+      'You are interpreting a natural-language CRM command. Respond with ONLY a JSON object: {"intent":"...","message":"..."} describing what action to take. If unclear, use intent "unknown".'
+    );
+    if (!completion) return null;
 
-  const keys = await prisma.apiKey.findMany({
-    select: { provider: true, key: true },
-  });
-  const configured = new Set(keys.map((k) => k.provider));
-
-  for (const m of frontier) {
-    if (!configured.has(m.provider)) continue;
-    const record = keys.find((k) => k.provider === m.provider);
-    if (!record) continue;
-
-    try {
-      const apiKey = decrypt(record.key);
-      const client = createProviderClient(m.provider, m.model, apiKey);
-
-      const completion = await client.complete({
-        system:
-          SYSTEM_PROMPTS.crm +
-          '\nYou are interpreting a natural-language CRM command. Respond with ONLY a JSON object: {"intent":"...","message":"..."} describing what action to take. If unclear, use intent "unknown".',
-        prompt: command,
-        temperature: 0.1,
-      });
-
-      // Best-effort: treat LLM output as guidance, not execution
-      return {
-        success: true,
-        intent: 'llm_interpreted',
-        message: completion.text,
-        usedLLM: true,
-      };
-    } catch {
-      continue;
-    }
+    // Best-effort: treat LLM output as guidance, not execution
+    return {
+      success: true,
+      intent: 'llm_interpreted',
+      message: completion,
+      usedLLM: true,
+    };
+  } catch {
+    return null;
   }
-
-  return null;
 }

@@ -100,7 +100,7 @@ export default function TeamManager() {
       </div>
 
       {showInvite && (
-        <div className="bg-white border border-gray-200 rounded-xl p-4">
+        <div className="bg-surface border border-gray-200 rounded-xl p-4">
           <form onSubmit={handleInvite} className="space-y-3">
             <div className="flex justify-between items-center">
               <h3 className="font-semibold text-sm">Invite a team member</h3>
@@ -136,7 +136,7 @@ export default function TeamManager() {
           <h3 className="text-sm font-semibold text-gray-500">Teams</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {teams.map((team) => (
-              <div key={team.id} className="bg-white border border-gray-200 rounded-xl p-4">
+              <div key={team.id} className="bg-surface border border-gray-200 rounded-xl p-4">
                 <p className="font-semibold text-gray-900">{team.name}</p>
                 <p className="text-sm text-gray-500 mt-1">
                   {team.agents.length} member{team.agents.length !== 1 ? 's' : ''}
@@ -158,7 +158,7 @@ export default function TeamManager() {
       {isLoading ? (
         <div className="text-center text-gray-400 py-8">Loading team...</div>
       ) : (
-        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+        <div className="bg-surface border border-gray-200 rounded-xl overflow-hidden">
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-200">
@@ -211,7 +211,7 @@ export default function TeamManager() {
                   <td className="px-4 py-3 text-right">
                     <button
                       onClick={() => handleRemove(agent.id)}
-                      className="text-gray-300 hover:text-red-500"
+                      className="text-gray-400 hover:text-red-500"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>

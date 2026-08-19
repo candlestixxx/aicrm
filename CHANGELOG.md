@@ -2,6 +2,65 @@
 
 All notable changes to the AiCRM project will be documented in this file.
 
+## [0.13.0] — 2026-08-18
+
+### Added (Light/Dark theme + color palettes)
+- **Theme system** — full light/dark mode with a `system` option, persisted to localStorage and applied before first paint (no flash of wrong theme).
+- **6 accent palettes** — Ocean, Violet, Teal, Rose, Amber, and Slate; the brand accent (`blue-*` scale) is remapped to the selected palette app-wide.
+- **Per-palette dark variants** — each palette has tuned dark-mode shades (brighter ink for contrast + dark-tinted soft backgrounds) so chips, links, and buttons look right on dark surfaces.
+- **ThemeSwitcher UI** — dropdown in the dashboard header (mode toggle + palette swatches) and a floating switcher on the auth pages.
+- **Live preview + Apply/Cancel** — selecting a mode or palette previews it on the page without saving; Apply commits it, Cancel (or closing) reverts to the saved theme.
+- **Theme-aware utilities** — Tailwind's gray scale and `bg-white` surfaces are remapped to CSS variables, so existing components flip light/dark automatically.
+- **`useSyncExternalStore` provider** (`ThemeProvider.tsx`) — server-safe, hydration-mismatch-free theme state.
+
+### Fixed
+- **HyperNexus console input** — text was invisible when the OS/browser used dark mode; the input now has explicit theme-aware background, text, and placeholder colors.
+- Code blocks / terminals now use explicit zinc colors so they stay readable in both themes.
+- Accent headings (`text-purple-900`, `text-blue-900`) brightened for dark-mode contrast.
+
+## [0.12.0] — 2026-08-17
+
+### Added (User Guide + Demo, UI polish)
+- **User Guide & Demo tab** (`UserGuide.tsx`) — interactive guide covering all 4 modules (HyperNexus commands, AI Assistant, Workflows, Control Plane) with step-by-step instructions and a **live demonstration button** per section.
+- **Console readability** — HyperNexus command console text brightened (white/cyan/emerald on black) for visibility.
+- Guide tab added first in the sidebar for discoverability.
+
+## [0.11.0] — 2026-08-17
+
+### Added (Pluggable AI Engine — two brains, one interface)
+- **`src/lib/ai/engine.ts`** — unified `AIEngine` interface with three selectable implementations:
+  - **Native (v1)** — direct calls to vault keys (DeepSeek/Gemini/OpenAI/Anthropic). Default.
+  - **ControlPlane (v2)** — routes through the external HyperNexus control plane (agent chat + swarm).
+  - **Hybrid (v1+v2)** — native first, control-plane fallback.
+- **`/api/ai/engines`** — engine registry (lists all + active).
+- **`EngineSelector.tsx`** — Settings UI showing both brains, capabilities, and active engine.
+- **`AI_ENGINE` env var** — `native|controlplane|hybrid` (default native).
+- Refactored workflows, NL engine, and assistant to use the unified engine (removed duplicated `callLLM` helpers).
+
+### Design intent
+This formalizes Option B (built-in brain as default) with a clean, gradual upgrade path to the external HyperNexus control plane — flip one env var when ready.
+
+## [0.10.0] — 2026-08-17
+
+### Added (AI Assistant Suite + Delivery)
+- **AI Assistant tab** (`AssistantPanel.tsx` + `/api/assistant`) — proactive intelligence layer:
+  - 📅 Daily digest (stats + headline + at-risk + nudges)
+  - ⚡ Next-best-action recommendations (AI-prioritized)
+  - 🔔 Smart nudges (overdue contact reminders)
+  - 💔 Lead going-cold detector
+  - 🔗 Lead ↔ property matching
+  - 📄 CMA generator (AI Comparative Market Analysis)
+  - 🔍 AI lead enrichment
+- **Delivery transport** (`src/lib/delivery.ts`) — SMS (Twilio) + email (Resend) with console fallback for dev. Workflows now actually deliver messages when a provider is configured.
+- **`/api/assistant`** — unified endpoint (digest, next-best, nudges, health, match, cma, enrich).
+
+### Verified
+- Daily digest returns real stats + at-risk leads + nudges ✅
+- Next-best-action prioritizes hot leads ✅
+
+### Note
+- SMS/email actually send when TWILIO_* / RESEND_API_KEY env vars are set; otherwise they log to console (dev fallback).
+
 ## [0.9.0] — 2026-08-17
 
 ### Added (Supercharged Vault + Multi-step Workflows)

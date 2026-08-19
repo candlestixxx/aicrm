@@ -86,7 +86,7 @@ export default function ToolCatalog() {
           {results.map((tool, i) => (
             <div
               key={i}
-              className="bg-white border border-gray-200 rounded-lg p-3 hover:shadow-sm"
+              className="bg-surface border border-gray-200 rounded-lg p-3 hover:shadow-sm"
             >
               <div className="flex items-center justify-between">
                 <p className="font-medium text-sm text-gray-900">

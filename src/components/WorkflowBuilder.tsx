@@ -153,7 +153,7 @@ export default function WorkflowBuilder() {
       </div>
 
       {showForm && (
-        <div className="bg-white border border-purple-200 rounded-xl p-5 space-y-4">
+        <div className="bg-surface border border-purple-200 rounded-xl p-5 space-y-4">
           <h4 className="font-medium text-gray-900">Create Workflow</h4>
           <form onSubmit={handleCreate} className="space-y-3">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -364,14 +364,14 @@ export default function WorkflowBuilder() {
       {isLoading ? (
         <div className="text-center text-gray-400 py-6">Loading workflows...</div>
       ) : workflows.length === 0 ? (
-        <div className="bg-white border border-gray-200 rounded-xl p-6 text-center text-gray-400 text-sm">
+        <div className="bg-surface border border-gray-200 rounded-xl p-6 text-center text-gray-400 text-sm">
           No workflows yet. Create one to automate your CRM — e.g., &quot;when a lead
           replies &apos;yes&apos;, mark them Hot.&quot;
         </div>
       ) : (
         <div className="space-y-2">
           {workflows.map((workflow) => (
-            <div key={workflow.id} className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+            <div key={workflow.id} className="bg-surface border border-gray-200 rounded-xl overflow-hidden">
               <div className="p-4 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
                   <span
@@ -414,7 +414,7 @@ export default function WorkflowBuilder() {
                   </button>
                   <button
                     onClick={() => handleDelete(workflow.id)}
-                    className="p-1 text-gray-300 hover:text-red-500"
+                    className="p-1 text-gray-400 hover:text-red-500"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>

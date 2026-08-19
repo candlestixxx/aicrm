@@ -126,12 +126,12 @@ export default function ModelManager() {
 
             {/* Educational / Tutorial Section */}
             <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 shadow-sm">
-                <h2 className="text-xl font-semibold text-blue-900 mb-4 flex items-center gap-2">
+                <h2 className="text-xl font-semibold text-blue-600 mb-4 flex items-center gap-2">
                     <Info className="w-5 h-5" />
                     How HyperNexus Routing Saves You Money
                 </h2>
                 <div className="grid md:grid-cols-2 gap-6">
-                    <div className="bg-white p-4 rounded-lg shadow-sm border border-blue-100">
+                    <div className="bg-surface p-4 rounded-lg shadow-sm border border-blue-100">
                         <div className="flex items-center gap-2 mb-2">
                             <Zap className="w-5 h-5 text-amber-500" />
                             <h3 className="font-bold">Tier 1: Fast & Cheap Models</h3>
@@ -140,7 +140,7 @@ export default function ModelManager() {
                             HyperNexus automatically routes simple tasks (like formatting data, scrubbing contacts, and basic categorization) to high-speed, low-cost models like <strong>Gemini Flash</strong> or <strong>Qwen</strong>.
                         </p>
                     </div>
-                    <div className="bg-white p-4 rounded-lg shadow-sm border border-blue-100">
+                    <div className="bg-surface p-4 rounded-lg shadow-sm border border-blue-100">
                         <div className="flex items-center gap-2 mb-2">
                             <Brain className="w-5 h-5 text-purple-500" />
                             <h3 className="font-bold">Tier 2: Frontier Reasoning</h3>
@@ -153,7 +153,7 @@ export default function ModelManager() {
             </div>
 
             {/* Connection Grid */}
-            <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+            <div className="bg-surface border border-gray-200 rounded-xl shadow-sm overflow-hidden">
                 <div className="border-b border-gray-200 bg-gray-50 px-6 py-4 flex items-center justify-between">
                     <h2 className="text-lg font-semibold flex items-center gap-2">
                         <Shield className="w-5 h-5 text-green-600" />
@@ -177,7 +177,7 @@ export default function ModelManager() {
                                         </span>
                                         <button
                                             onClick={() => handleDisconnect(p.provider)}
-                                            className="text-sm text-red-600 hover:text-red-800 font-medium"
+                                            className="text-sm text-red-600 hover:text-red-700 font-medium"
                                         >
                                             Disconnect
                                         </button>
@@ -185,7 +185,7 @@ export default function ModelManager() {
                                 ) : (
                                     <button
                                         onClick={() => handleConnect(p.provider)}
-                                        className="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition"
+                                        className="bg-zinc-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-zinc-800 transition"
                                     >
                                         Connect
                                     </button>
@@ -199,7 +199,7 @@ export default function ModelManager() {
             {/* Modal for adding keys */}
             {activeProvider && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-                    <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
+                    <div className="bg-surface rounded-xl shadow-xl w-full max-w-md overflow-hidden">
                         <div className="bg-gray-50 px-6 py-4 border-b border-gray-200 flex justify-between items-center">
                             <h3 className="font-bold text-lg">Connect {activeProvider}</h3>
                             <button onClick={() => setActiveProvider(null)} className="text-gray-400 hover:text-gray-600">

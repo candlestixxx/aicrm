@@ -1,38 +1,12 @@
 import prisma from '@/lib/db/prisma';
 import { sendEmail } from '@/lib/mailer';
 import { hypernexusMemoryAdd } from '@/lib/hypernexus/client';
-import { decrypt } from '@/lib/encryption';
-import { createProviderClient, SYSTEM_PROMPTS } from '@/lib/llm/providers';
+import { sendMessage, resolveDestination } from '@/lib/delivery';
+import { getAIEngine } from '@/lib/ai/engine';
 
-/**
- * Call an AI model using a key from the vault (prefers DeepSeek, then any).
- */
+/** Call the configured AI engine (native by default, or control-plane/hybrid). */
 async function callLLM(prompt: string, system?: string): Promise<string | null> {
-  const keys = await prisma.apiKey.findMany({ select: { provider: true, key: true } });
-  if (keys.length === 0) return null;
-
-  const preference = ['DeepSeek', 'OpenAI', 'Anthropic', 'Google Gemini'];
-  const ordered = keys.sort(
-    (a, b) => preference.indexOf(a.provider) - preference.indexOf(b.provider)
-  );
-
-  for (const record of ordered) {
-    try {
-      const apiKey = decrypt(record.key);
-      const model = record.provider === 'DeepSeek' ? 'deepseek-chat' : undefined;
-      if (!model) continue; // skip providers we don't have a default model for
-      const client = createProviderClient(record.provider, model, apiKey);
-      const completion = await client.complete({
-        system: system || SYSTEM_PROMPTS.crm,
-        prompt,
-        maxTokens: 800,
-      });
-      return completion.text;
-    } catch {
-      continue;
-    }
-  }
-  return null;
+  return getAIEngine().complete(prompt, system);
 }
 
 /**
@@ -159,16 +133,21 @@ async function executeAction(
       if (!payload.contactId || !action.body) {
         return 'skipped: missing contactId or body';
       }
+      const channel = (action.channel || 'email') as 'sms' | 'email';
+      const destination = await resolveDestination(payload.contactId, channel);
       await prisma.communication.create({
         data: {
           contactId: payload.contactId,
           direction: 'outbound',
-          channel: action.channel || 'email',
+          channel,
           body: action.body,
-          status: 'queued',
+          status: destination ? 'sent' : 'queued',
         },
       });
-      return `communication queued via ${action.channel || 'email'}`;
+      if (destination) {
+        await sendMessage({ to: destination, body: action.body, subject: action.subject }, channel);
+      }
+      return `communication ${destination ? 'sent' : 'queued (no destination)'} via ${channel}`;
     }
 
     case 'create_task': {
@@ -220,20 +199,28 @@ async function executeAction(
       const draft = await callLLM(prompt);
       if (!draft) return 'ai_draft: no AI key available';
 
-      // Store the draft as a queued communication
+      const channel = (action.channel || 'email') as 'sms' | 'email';
+      const destination = payload.contactId
+        ? await resolveDestination(payload.contactId, channel)
+        : null;
+
+      // Store the draft as a communication and deliver if possible
       if (payload.contactId) {
         await prisma.communication.create({
           data: {
             contactId: payload.contactId,
             direction: 'outbound',
-            channel: action.channel || 'email',
+            channel,
             subject: action.subject || null,
             body: draft,
-            status: 'queued',
+            status: destination ? 'sent' : 'queued',
           },
         });
       }
-      return `ai_draft: generated ${action.channel || 'email'} draft`;
+      if (destination) {
+        await sendMessage({ to: destination, body: draft, subject: action.subject }, channel);
+      }
+      return `ai_draft: ${destination ? 'sent' : 'generated (no destination)'} ${channel} draft`;
     }
 
     case 'ai_analyze': {

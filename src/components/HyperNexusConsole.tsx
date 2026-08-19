@@ -102,23 +102,23 @@ export default function HyperNexusConsole() {
       </div>
 
       {/* Log */}
-      <div className="bg-gray-900 rounded-xl p-4 min-h-[300px] max-h-[400px] overflow-y-auto font-mono text-sm space-y-3">
+      <div className="bg-zinc-950 rounded-xl p-4 min-h-[300px] max-h-[400px] overflow-y-auto font-mono text-sm space-y-3 border border-zinc-800">
         {log.length === 0 ? (
-          <div className="text-gray-500 flex items-center gap-2">
-            <Terminal className="w-4 h-4" />
-            <span>HyperNexus ready. Try a command below.</span>
+          <div className="text-zinc-300 flex items-center gap-2">
+            <Terminal className="w-4 h-4 text-cyan-400" />
+            <span className="font-medium">HyperNexus ready. Try a command below.</span>
           </div>
         ) : (
           log.map((entry) => (
             <div key={entry.id}>
               {entry.role === 'user' ? (
-                <div className="text-green-400">
-                  <span className="text-gray-500">$ </span>
+                <div className="text-emerald-300 font-semibold">
+                  <span className="text-cyan-400">$ </span>
                   {entry.text}
                 </div>
               ) : (
-                <div className="text-gray-200">
-                  <span className="text-purple-400">
+                <div className="text-white">
+                  <span className="text-fuchsia-400 font-semibold">
                     {entry.intent ? `[${entry.intent}] ` : ''}
                   </span>
                   <span className="whitespace-pre-wrap">{entry.text}</span>
@@ -141,7 +141,7 @@ export default function HyperNexusConsole() {
           value={command}
           onChange={(e) => setCommand(e.target.value)}
           placeholder="e.g., 'create a task to call John tomorrow'"
-          className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 outline-none"
+          className="flex-1 px-4 py-2.5 bg-surface text-gray-900 placeholder:text-gray-400 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 outline-none"
         />
         <button
           type="submit"

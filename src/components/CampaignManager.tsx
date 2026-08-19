@@ -95,7 +95,7 @@ export default function CampaignManager() {
       </div>
 
       {showForm && (
-        <div className="bg-white border border-gray-200 rounded-xl p-4">
+        <div className="bg-surface border border-gray-200 rounded-xl p-4">
           <form onSubmit={handleCreate} className="space-y-3">
             <input
               type="text"
@@ -148,7 +148,7 @@ export default function CampaignManager() {
       {isLoading ? (
         <div className="text-center text-gray-400 py-8">Loading campaigns...</div>
       ) : campaigns.length === 0 ? (
-        <div className="bg-white rounded-xl border border-gray-200 p-8 text-center text-gray-400">
+        <div className="bg-surface rounded-xl border border-gray-200 p-8 text-center text-gray-400">
           No campaigns yet. Create a drip campaign to nurture leads automatically.
         </div>
       ) : (
@@ -156,7 +156,7 @@ export default function CampaignManager() {
           {campaigns.map((campaign) => (
             <div
               key={campaign.id}
-              className="bg-white border border-gray-200 rounded-xl p-4"
+              className="bg-surface border border-gray-200 rounded-xl p-4"
             >
               <div className="flex items-start justify-between">
                 <div>

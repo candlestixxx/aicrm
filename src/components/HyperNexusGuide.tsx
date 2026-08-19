@@ -22,7 +22,7 @@ export default function HyperNexusGuide() {
       >
         <div className="flex items-center gap-2">
           <BookOpen className="w-5 h-5 text-purple-600" />
-          <span className="font-semibold text-purple-900">
+          <span className="font-semibold text-purple-600">
             What is HyperNexus? (Guide)
           </span>
         </div>
@@ -61,7 +61,7 @@ export default function HyperNexusGuide() {
 
           {/* Two ways to use */}
           <div className="grid md:grid-cols-2 gap-3">
-            <div className="bg-white rounded-lg p-4 border border-purple-100">
+            <div className="bg-surface rounded-lg p-4 border border-purple-100">
               <h5 className="font-semibold text-gray-900 mb-1 flex items-center gap-1">
                 <Terminal className="w-4 h-4 text-purple-500" /> 1. Commands (you)
               </h5>
@@ -77,7 +77,7 @@ export default function HyperNexusGuide() {
               </ul>
             </div>
 
-            <div className="bg-white rounded-lg p-4 border border-purple-100">
+            <div className="bg-surface rounded-lg p-4 border border-purple-100">
               <h5 className="font-semibold text-gray-900 mb-1 flex items-center gap-1">
                 <Zap className="w-4 h-4 text-purple-500" /> 2. Workflows (automatic)
               </h5>
@@ -93,7 +93,7 @@ export default function HyperNexusGuide() {
           </div>
 
           {/* MCP */}
-          <div className="bg-white rounded-lg p-4 border border-blue-100">
+          <div className="bg-surface rounded-lg p-4 border border-blue-100">
             <h5 className="font-semibold text-gray-900 mb-1 flex items-center gap-1">
               <Globe className="w-4 h-4 text-blue-500" /> 3. Connect external AI agents (MCP)
             </h5>
@@ -105,10 +105,10 @@ export default function HyperNexusGuide() {
               capability external AIs can call.
             </p>
 
-            <div className="mt-3 bg-gray-900 rounded-lg p-3 font-mono text-xs text-gray-200 space-y-1">
-              <p className="text-gray-500"># MCP endpoint</p>
+            <div className="mt-3 bg-zinc-900 rounded-lg p-3 font-mono text-xs text-zinc-200 space-y-1">
+              <p className="text-zinc-500"># MCP endpoint</p>
               <p>POST http://localhost:3001/api/mcp</p>
-              <p className="text-gray-500"># Auth header (set MCP_TOKEN in .env)</p>
+              <p className="text-zinc-500"># Auth header (set MCP_TOKEN in .env)</p>
               <p>Authorization: Bearer your-mcp-token</p>
             </div>
 
@@ -121,7 +121,7 @@ export default function HyperNexusGuide() {
           </div>
 
           {/* External links */}
-          <div className="bg-white rounded-lg p-4 border border-gray-200">
+          <div className="bg-surface rounded-lg p-4 border border-gray-200">
             <h5 className="font-semibold text-gray-900 mb-2">Learn more (external)</h5>
             <div className="space-y-2">
               <a

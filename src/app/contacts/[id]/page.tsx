@@ -139,7 +139,7 @@ export default function ContactDetailPage() {
       </button>
 
       {/* Header */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
+      <div className="bg-surface rounded-xl border border-gray-200 p-6">
         <div className="flex items-start justify-between flex-wrap gap-4">
           <div className="flex items-center gap-4">
             <div className="w-14 h-14 bg-blue-100 rounded-full flex items-center justify-center">
@@ -203,7 +203,7 @@ export default function ContactDetailPage() {
 
       {/* Edit form */}
       {editing && (
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <div className="bg-surface rounded-xl border border-gray-200 p-6">
           <h2 className="font-semibold text-gray-900 mb-3">Edit Contact</h2>
           <form onSubmit={handleSave} className="space-y-3">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -268,7 +268,7 @@ export default function ContactDetailPage() {
         {/* Left column: details */}
         <div className="lg:col-span-2 space-y-6">
           {/* Contact info */}
-          <div className="bg-white rounded-xl border border-gray-200 p-6">
+          <div className="bg-surface rounded-xl border border-gray-200 p-6">
             <h2 className="font-semibold text-gray-900 mb-4">Contact Information</h2>
             <div className="space-y-3">
               {data.email && (
@@ -308,7 +308,7 @@ export default function ContactDetailPage() {
 
           {/* Lead details */}
           {data.lead && (
-            <div className="bg-white rounded-xl border border-gray-200 p-6">
+            <div className="bg-surface rounded-xl border border-gray-200 p-6">
               <h2 className="font-semibold text-gray-900 mb-4">Lead Details</h2>
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
@@ -336,7 +336,7 @@ export default function ContactDetailPage() {
           )}
 
           {/* Activity timeline */}
-          <div className="bg-white rounded-xl border border-gray-200 p-6">
+          <div className="bg-surface rounded-xl border border-gray-200 p-6">
             <h2 className="font-semibold text-gray-900 mb-4">Activity</h2>
             <form onSubmit={handleAddNote} className="flex gap-2 mb-4">
               <input
@@ -377,7 +377,7 @@ export default function ContactDetailPage() {
 
         {/* Right column: communications */}
         <div className="space-y-6">
-          <div className="bg-white rounded-xl border border-gray-200 p-6">
+          <div className="bg-surface rounded-xl border border-gray-200 p-6">
             <h2 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
               <MessageSquare className="w-4 h-4" /> Communications
             </h2>

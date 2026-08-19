@@ -59,15 +59,15 @@ export default function HyperNexusDashboard() {
       </div>
 
       {iframeFailed ? (
-        <div className="bg-white border border-gray-200 rounded-xl p-8 text-center">
-          <Server className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+        <div className="bg-surface border border-gray-200 rounded-xl p-8 text-center">
+          <Server className="w-8 h-8 text-gray-400 mx-auto mb-2" />
           <p className="text-gray-600 font-medium">Dashboard not reachable</p>
           <p className="text-sm text-gray-500 mt-1">
             The HyperNexus web dashboard runs on{' '}
             <code className="bg-gray-100 px-1 rounded">{dashboardUrl}</code>.
           </p>
-          <div className="mt-4 text-left bg-gray-900 rounded-lg p-4 font-mono text-xs text-gray-200 max-w-md mx-auto">
-            <p className="text-gray-500"># Start the dashboard (in the HyperNexus submodule)</p>
+          <div className="mt-4 text-left bg-zinc-900 rounded-lg p-4 font-mono text-xs text-zinc-200 max-w-md mx-auto">
+            <p className="text-zinc-500"># Start the dashboard (in the HyperNexus submodule)</p>
             <p>cd workspace/HyperNexus</p>
             <p>pnpm install</p>
             <p>pnpm dev:web</p>
@@ -80,7 +80,7 @@ export default function HyperNexusDashboard() {
           </button>
         </div>
       ) : (
-        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+        <div className="bg-surface border border-gray-200 rounded-xl overflow-hidden">
           <iframe
             src={dashboardUrl}
             title="HyperNexus Dashboard"

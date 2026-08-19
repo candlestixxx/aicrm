@@ -105,7 +105,7 @@ export default function PropertyManager() {
       </div>
 
       {showForm && (
-        <div className="bg-white border border-gray-200 rounded-xl p-4">
+        <div className="bg-surface border border-gray-200 rounded-xl p-4">
           <form onSubmit={handleCreate} className="space-y-3">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <input
@@ -212,7 +212,7 @@ export default function PropertyManager() {
       {isLoading ? (
         <div className="text-center text-gray-400 py-8">Loading properties...</div>
       ) : properties.length === 0 ? (
-        <div className="bg-white rounded-xl border border-gray-200 p-8 text-center text-gray-400">
+        <div className="bg-surface rounded-xl border border-gray-200 p-8 text-center text-gray-400">
           No properties yet. Add your first listing.
         </div>
       ) : (
@@ -220,7 +220,7 @@ export default function PropertyManager() {
           {properties.map((p) => (
             <div
               key={p.id}
-              className="bg-white border border-gray-200 rounded-xl p-4 hover:shadow-md transition"
+              className="bg-surface border border-gray-200 rounded-xl p-4 hover:shadow-md transition"
             >
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-2">
@@ -231,7 +231,7 @@ export default function PropertyManager() {
                 </div>
                 <button
                   onClick={() => handleDelete(p.id)}
-                  className="text-gray-300 hover:text-red-500"
+                  className="text-gray-400 hover:text-red-500"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>

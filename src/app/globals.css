@@ -1,26 +1,150 @@
 @import "tailwindcss";
 
+/* ------------------------------------------------------------------ */
+/*  AiCRM theme system                                                 */
+/*  - Neutrals (--n-*) flip between light & dark via [data-mode]       */
+/*  - Accent (--p-*) changes per palette via [data-theme]              */
+/*  - Tailwind's gray scale is remapped to --n-* so existing           */
+/*    bg-gray-*, text-gray-*, border-gray-* classes become theme-aware */
+/*  - Tailwind's blue scale is remapped to --p-* as the brand accent   */
+/* ------------------------------------------------------------------ */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Light neutrals (default) */
+  --n-50: #f9fafb;
+  --n-100: #f3f4f6;
+  --n-200: #e5e7eb;
+  --n-300: #d1d5db;
+  --n-400: #9ca3af;
+  --n-500: #6b7280;
+  --n-600: #4b5563;
+  --n-700: #374151;
+  --n-800: #1f2937;
+  --n-900: #111827;
+
+  --surface: #ffffff;
+  --surface-2: #f3f4f6;
+
+  color-scheme: light;
+}
+
+:root[data-mode="dark"] {
+  --n-50: #0a0d13;
+  --n-100: #1a1f29;
+  --n-200: #232a35;
+  --n-300: #2f3744;
+  --n-400: #5d6675;
+  --n-500: #8a93a3;
+  --n-600: #aab2bf;
+  --n-700: #c7cfda;
+  --n-800: #dee3ec;
+  --n-900: #f2f5f9;
+
+  --surface: #11151d;
+  --surface-2: #171c26;
+
+  color-scheme: dark;
+}
+
+/* Accent palettes (mapped to Tailwind's blue-* scale) */
+:root[data-theme="ocean"] {
+  --p-50: #eff6ff; --p-100: #dbeafe; --p-200: #bfdbfe;
+  --p-500: #3b82f6; --p-600: #2563eb; --p-700: #1d4ed8; --p-900: #1e3a8a;
+}
+:root[data-theme="violet"] {
+  --p-50: #f5f3ff; --p-100: #ede9fe; --p-200: #ddd6fe;
+  --p-500: #8b5cf6; --p-600: #7c3aed; --p-700: #6d28d9; --p-900: #4c1d95;
+}
+:root[data-theme="teal"] {
+  --p-50: #f0fdfa; --p-100: #ccfbf1; --p-200: #99f6e4;
+  --p-500: #14b8a6; --p-600: #0d9488; --p-700: #0f766e; --p-900: #134e4a;
+}
+:root[data-theme="rose"] {
+  --p-50: #fff1f2; --p-100: #ffe4e6; --p-200: #fecdd3;
+  --p-500: #f43f5e; --p-600: #e11d48; --p-700: #be123c; --p-900: #881337;
+}
+:root[data-theme="amber"] {
+  --p-50: #fffbeb; --p-100: #fef3c7; --p-200: #fde68a;
+  --p-500: #f59e0b; --p-600: #d97706; --p-700: #b45309; --p-900: #78350f;
+}
+:root[data-theme="slate"] {
+  --p-50: #f8fafc; --p-100: #f1f5f9; --p-200: #e2e8f0;
+  --p-500: #64748b; --p-600: #475569; --p-700: #334155; --p-900: #0f172a;
+}
+
+/* Per-palette dark-mode accents: brighter ink shades for contrast and
+   dark-tinted soft backgrounds so chips/blocks sit naturally on dark UI. */
+:root[data-mode="dark"][data-theme="ocean"] {
+  --p-50: #0c1524; --p-100: #122036; --p-200: #1a2f52;
+  --p-500: #60a5fa; --p-600: #3b82f6; --p-700: #60a5fa; --p-900: #93c5fd;
+}
+:root[data-mode="dark"][data-theme="violet"] {
+  --p-50: #171126; --p-100: #221838; --p-200: #332255;
+  --p-500: #a78bfa; --p-600: #8b5cf6; --p-700: #a78bfa; --p-900: #c4b5fd;
+}
+:root[data-mode="dark"][data-theme="teal"] {
+  --p-50: #0a1a1c; --p-100: #0f2527; --p-200: #143a3c;
+  --p-500: #2dd4bf; --p-600: #14b8a6; --p-700: #2dd4bf; --p-900: #5eead4;
+}
+:root[data-mode="dark"][data-theme="rose"] {
+  --p-50: #1e1015; --p-100: #2c161d; --p-200: #451f2a;
+  --p-500: #fb7185; --p-600: #f43f5e; --p-700: #fb7185; --p-900: #fda4af;
+}
+:root[data-mode="dark"][data-theme="amber"] {
+  --p-50: #1a1408; --p-100: #251c0b; --p-200: #3a2c10;
+  --p-500: #fbbf24; --p-600: #f59e0b; --p-700: #fbbf24; --p-900: #fcd34d;
+}
+:root[data-mode="dark"][data-theme="slate"] {
+  --p-50: #12161c; --p-100: #181d25; --p-200: #232a36;
+  --p-500: #94a3b8; --p-600: #64748b; --p-700: #94a3b8; --p-900: #cbd5e1;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+
+  --color-gray-50: var(--n-50);
+  --color-gray-100: var(--n-100);
+  --color-gray-200: var(--n-200);
+  --color-gray-300: var(--n-300);
+  --color-gray-400: var(--n-400);
+  --color-gray-500: var(--n-500);
+  --color-gray-600: var(--n-600);
+  --color-gray-700: var(--n-700);
+  --color-gray-800: var(--n-800);
+  --color-gray-900: var(--n-900);
+
+  --color-blue-50: var(--p-50);
+  --color-blue-100: var(--p-100);
+  --color-blue-200: var(--p-200);
+  --color-blue-500: var(--p-500);
+  --color-blue-600: var(--p-600);
+  --color-blue-700: var(--p-700);
+  --color-blue-900: var(--p-900);
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+body {
+  background: var(--n-50);
+  color: var(--n-900);
+  font-family: Arial, Helvetica, sans-serif;
+  transition: background-color 0.25s ease, color 0.25s ease;
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+::placeholder {
+  color: var(--n-400);
+  opacity: 1;
+}
+
+::selection {
+  background: var(--p-600);
+  color: #ffffff;
+}
+
+/* Custom scrollbars that respect the theme */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--n-300) transparent;
 }

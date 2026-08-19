@@ -6,7 +6,7 @@ import useSWR from 'swr';
 import {
   Users, Building2, TrendingUp, Calendar, Settings,
   LogOut, Menu, X, Home, BarChart3, CheckSquare,
-  Megaphone, Sparkles, ShieldCheck,
+  Megaphone, Sparkles, ShieldCheck, BookOpen,
 } from 'lucide-react';
 import ContactList from '@/components/ContactList';
 import ModelManager from '@/components/ModelManager';
@@ -22,8 +22,14 @@ import ToolCatalog from '@/components/ToolCatalog';
 import SwarmConsole from '@/components/SwarmConsole';
 import HyperNexusDashboard from '@/components/HyperNexusDashboard';
 import Vault from '@/components/Vault';
+import AssistantPanel from '@/components/AssistantPanel';
+import EngineSelector from '@/components/EngineSelector';
+import UserGuide from '@/components/UserGuide';
+import ThemeSwitcher from '@/components/ThemeSwitcher';
 
 type Tab =
+  | 'guide'
+  | 'assistant'
   | 'dashboard'
   | 'contacts'
   | 'pipeline'
@@ -73,6 +79,8 @@ export default function DashboardPage() {
   };
 
   const tabs: { key: Tab; label: string; icon: React.ReactNode }[] = [
+    { key: 'guide', label: 'Guide & Demo', icon: <BookOpen className="w-5 h-5" /> },
+    { key: 'assistant', label: 'AI Assistant', icon: <Sparkles className="w-5 h-5" /> },
     { key: 'dashboard', label: 'Dashboard', icon: <Home className="w-5 h-5" /> },
     { key: 'hypernexus', label: 'HyperNexus', icon: <Sparkles className="w-5 h-5" /> },
     { key: 'contacts', label: 'Contacts', icon: <Users className="w-5 h-5" /> },
@@ -90,7 +98,7 @@ export default function DashboardPage() {
     <div className="min-h-screen flex bg-gray-50">
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-gray-200 transform transition-transform lg:translate-x-0 lg:static ${
+        className={`fixed inset-y-0 left-0 z-40 w-64 bg-surface border-r border-gray-200 transform transition-transform lg:translate-x-0 lg:static ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -149,7 +157,7 @@ export default function DashboardPage() {
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top Bar */}
-        <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6">
+        <header className="h-16 bg-surface border-b border-gray-200 flex items-center justify-between px-6">
           <button
             onClick={() => setSidebarOpen(true)}
             className="lg:hidden text-gray-600"
@@ -164,6 +172,7 @@ export default function DashboardPage() {
           </div>
 
           <div className="flex items-center gap-4">
+            <ThemeSwitcher />
             {userData && (
               <span className="text-sm text-gray-600">
                 {userData.name || userData.email}
@@ -174,11 +183,15 @@ export default function DashboardPage() {
 
         {/* Page Content */}
         <main className="flex-1 p-6 overflow-auto">
+          {activeTab === 'guide' && <UserGuide />}
+
+          {activeTab === 'assistant' && <AssistantPanel />}
+
           {activeTab === 'dashboard' && (
             <div className="space-y-6">
               {/* Stats */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-white rounded-xl border border-gray-200 p-5">
+                <div className="bg-surface rounded-xl border border-gray-200 p-5">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-gray-500">Total Contacts</p>
@@ -187,7 +200,7 @@ export default function DashboardPage() {
                     <Users className="w-8 h-8 text-blue-500" />
                   </div>
                 </div>
-                <div className="bg-white rounded-xl border border-gray-200 p-5">
+                <div className="bg-surface rounded-xl border border-gray-200 p-5">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-gray-500">Active Leads</p>
@@ -196,7 +209,7 @@ export default function DashboardPage() {
                     <TrendingUp className="w-8 h-8 text-green-500" />
                   </div>
                 </div>
-                <div className="bg-white rounded-xl border border-gray-200 p-5">
+                <div className="bg-surface rounded-xl border border-gray-200 p-5">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-gray-500">Closed This Month</p>
@@ -205,7 +218,7 @@ export default function DashboardPage() {
                     <Home className="w-8 h-8 text-purple-500" />
                   </div>
                 </div>
-                <div className="bg-white rounded-xl border border-gray-200 p-5">
+                <div className="bg-surface rounded-xl border border-gray-200 p-5">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-gray-500">Upcoming Tasks</p>
@@ -217,7 +230,7 @@ export default function DashboardPage() {
               </div>
 
               {/* Recent Contacts */}
-              <div className="bg-white rounded-xl border border-gray-200 p-6">
+              <div className="bg-surface rounded-xl border border-gray-200 p-6">
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">Welcome to AiCRM</h2>
                 <p className="text-gray-600 mb-4">
                   Your agentic real estate CRM is ready. Get started by:
@@ -240,7 +253,7 @@ export default function DashboardPage() {
                   className={`px-4 py-2 rounded-lg text-sm font-medium ${
                     nexusView === 'assistant'
                       ? 'bg-purple-600 text-white'
-                      : 'bg-white border border-gray-300 text-gray-600 hover:bg-gray-50'
+                      : 'bg-surface border border-gray-300 text-gray-600 hover:bg-gray-50'
                   }`}
                 >
                   Assistant & Workflows
@@ -250,7 +263,7 @@ export default function DashboardPage() {
                   className={`px-4 py-2 rounded-lg text-sm font-medium ${
                     nexusView === 'control'
                       ? 'bg-purple-600 text-white'
-                      : 'bg-white border border-gray-300 text-gray-600 hover:bg-gray-50'
+                      : 'bg-surface border border-gray-300 text-gray-600 hover:bg-gray-50'
                   }`}
                 >
                   Control Plane
@@ -290,7 +303,7 @@ export default function DashboardPage() {
           {activeTab === 'vault' && <Vault />}
 
           {activeTab === 'settings' && (
-            <div className="bg-white rounded-xl border border-gray-200 p-6">
+            <div className="bg-surface rounded-xl border border-gray-200 p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Settings</h2>
               <div className="space-y-4">
                 <div className="p-4 border border-gray-200 rounded-lg">
@@ -311,6 +324,7 @@ export default function DashboardPage() {
                     Default pipeline stages: New Lead → Contacted → Showing Scheduled → Offer Made → Negotiation → Closed
                   </p>
                 </div>
+                <EngineSelector />
               </div>
             </div>
           )}

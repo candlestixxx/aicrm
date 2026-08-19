@@ -201,7 +201,7 @@ export default function ContactList() {
           </select>
           <button
             type="submit"
-            className="px-4 py-2 bg-gray-900 text-white rounded-lg text-sm hover:bg-gray-800"
+            className="px-4 py-2 bg-zinc-900 text-white rounded-lg text-sm hover:bg-zinc-800"
           >
             Search
           </button>
@@ -232,7 +232,7 @@ export default function ContactList() {
       {/* Import Modal */}
       {showImport && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6 space-y-4">
+          <div className="bg-surface rounded-xl shadow-xl w-full max-w-md p-6 space-y-4">
             <div className="flex justify-between items-center">
               <h3 className="font-bold text-lg">Import Contacts (CSV)</h3>
               <button onClick={() => { setShowImport(false); setImportResult(null); }}>
@@ -283,7 +283,7 @@ export default function ContactList() {
       {/* Add Contact Modal */}
       {showAdd && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6 space-y-4">
+          <div className="bg-surface rounded-xl shadow-xl w-full max-w-md p-6 space-y-4">
             <div className="flex justify-between items-center">
               <h3 className="font-bold text-lg">Add Contact</h3>
               <button onClick={() => setShowAdd(false)}>
@@ -345,7 +345,7 @@ export default function ContactList() {
       {/* Edit Modal */}
       {editingContact && editingContact.id && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6 space-y-4">
+          <div className="bg-surface rounded-xl shadow-xl w-full max-w-md p-6 space-y-4">
             <div className="flex justify-between items-center">
               <h3 className="font-bold text-lg">Edit Contact</h3>
               <button onClick={() => setEditingContact(null)}>
@@ -395,7 +395,7 @@ export default function ContactList() {
       )}
 
       {/* Table */}
-      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+      <div className="bg-surface border border-gray-200 rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
