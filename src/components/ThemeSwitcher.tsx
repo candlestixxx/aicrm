@@ -3,7 +3,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Check, Moon, Monitor, Palette, Sun } from 'lucide-react';
 import { useTheme } from '@/components/ThemeProvider';
-import { PALETTES, type ThemeMode } from '@/lib/theme';
+import { PALETTES, CUSTOM_PALETTE, type ThemeMode } from '@/lib/theme';
+import { hslToHex } from '@/lib/color';
+import ColorWheel from '@/components/ColorWheel';
 
 const MODES: { key: ThemeMode; label: string; icon: React.ReactNode }[] = [
   { key: 'light', label: 'Light', icon: <Sun className="w-4 h-4" /> },
@@ -32,9 +34,10 @@ function writeDom(concrete: 'light' | 'dark', palette: string) {
 }
 
 export default function ThemeSwitcher() {
-  const { mode, palette, resolved, setMode, setPalette } = useTheme();
+  const { mode, palette, resolved, customColor, setMode, setPalette } = useTheme();
   const [open, setOpen] = useState(false);
   const [preview, setPreview] = useState<Preview | null>(null);
+  const [wheelOpen, setWheelOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   const previewRef = useRef<Preview | null>(null);
@@ -51,7 +54,11 @@ export default function ThemeSwitcher() {
   const isPreviewing =
     preview !== null && (preview.mode !== mode || preview.palette !== palette);
 
-  const activePalette = PALETTES.find((p) => p.id === currentPalette) || PALETTES[0];
+  const customHex = customColor ? hslToHex(customColor.h, customColor.s, customColor.l) : '#7c3aed';
+  const activePalette =
+    currentPalette === CUSTOM_PALETTE
+      ? { id: CUSTOM_PALETTE, name: 'Custom', swatch: customHex }
+      : PALETTES.find((p) => p.id === currentPalette) || PALETTES[0];
 
   function applyPreview(next: Preview) {
     setPreview(next);
@@ -198,6 +205,33 @@ export default function ThemeSwitcher() {
                 )}
               </button>
             ))}
+
+            {/* Custom color wheel entry */}
+            <button
+              type="button"
+              onClick={() => {
+                setOpen(false);
+                setWheelOpen(true);
+              }}
+              title="Custom color"
+              className={`relative flex items-center justify-center gap-1.5 px-1 py-2 rounded-lg text-xs transition border ${
+                currentPalette === CUSTOM_PALETTE
+                  ? 'border-blue-300 bg-blue-50'
+                  : 'border-gray-200 hover:bg-gray-100'
+              }`}
+            >
+              <span
+                className="w-4 h-4 rounded-full ring-1 ring-black/10"
+                style={{
+                  background:
+                    'conic-gradient(from 0deg, hsl(0 100% 50%), hsl(60 100% 50%), hsl(120 100% 50%), hsl(180 100% 50%), hsl(240 100% 50%), hsl(300 100% 50%), hsl(360 100% 50%))',
+                }}
+              />
+              <span className="text-gray-600">Custom</span>
+              {palette === CUSTOM_PALETTE && (
+                <Check className="w-3 h-3 absolute top-1 right-1 text-blue-600" />
+              )}
+            </button>
           </div>
 
           <div className="mt-3 pt-3 border-t border-gray-200 text-[11px] text-gray-500">
@@ -212,6 +246,8 @@ export default function ThemeSwitcher() {
           </div>
         </div>
       )}
+
+      {wheelOpen && <ColorWheel open onClose={() => setWheelOpen(false)} />}
     </div>
   );
 }

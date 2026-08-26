@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import useSWR from 'swr';
 import {
   Users, Building2, TrendingUp, Calendar, Settings,
   LogOut, Menu, X, Home, BarChart3, CheckSquare,
-  Megaphone, Sparkles, ShieldCheck, BookOpen,
+  Megaphone, Sparkles, ShieldCheck, BookOpen, HelpCircle,
 } from 'lucide-react';
 import ContactList from '@/components/ContactList';
 import ModelManager from '@/components/ModelManager';
@@ -26,6 +26,9 @@ import AssistantPanel from '@/components/AssistantPanel';
 import EngineSelector from '@/components/EngineSelector';
 import UserGuide from '@/components/UserGuide';
 import ThemeSwitcher from '@/components/ThemeSwitcher';
+import HelpCenter from '@/components/HelpCenter';
+import HelpChat from '@/components/HelpChat';
+import OnboardingTour from '@/components/OnboardingTour';
 
 type Tab =
   | 'guide'
@@ -40,6 +43,7 @@ type Tab =
   | 'hypernexus'
   | 'models'
   | 'vault'
+  | 'help'
   | 'settings';
 
 interface SessionUser {
@@ -57,6 +61,8 @@ export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [nexusView, setNexusView] = useState<'assistant' | 'control'>('assistant');
+  const [tourOpen, setTourOpen] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
   const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
   const { data: userData } = useSWR<SessionUser>('/api/auth/me', fetcher);
@@ -78,6 +84,20 @@ export default function DashboardPage() {
     router.refresh();
   };
 
+  // Auto-start the guided tour on first visit (deferred so the dashboard paints first).
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (!localStorage.getItem('aicrm-tour-seen')) {
+      const t = setTimeout(() => setTourOpen(true), 300);
+      return () => clearTimeout(t);
+    }
+  }, []);
+
+  const handleTourClose = () => {
+    setTourOpen(false);
+    if (typeof window !== 'undefined') localStorage.setItem('aicrm-tour-seen', '1');
+  };
+
   const tabs: { key: Tab; label: string; icon: React.ReactNode }[] = [
     { key: 'guide', label: 'Guide & Demo', icon: <BookOpen className="w-5 h-5" /> },
     { key: 'assistant', label: 'AI Assistant', icon: <Sparkles className="w-5 h-5" /> },
@@ -91,6 +111,7 @@ export default function DashboardPage() {
     { key: 'team', label: 'Team', icon: <Users className="w-5 h-5" /> },
     { key: 'models', label: 'AI Models', icon: <BarChart3 className="w-5 h-5" /> },
     { key: 'vault', label: 'Vault', icon: <ShieldCheck className="w-5 h-5" /> },
+    { key: 'help', label: 'Help', icon: <HelpCircle className="w-5 h-5" /> },
     { key: 'settings', label: 'Settings', icon: <Settings className="w-5 h-5" /> },
   ];
 
@@ -302,6 +323,10 @@ export default function DashboardPage() {
 
           {activeTab === 'vault' && <Vault />}
 
+          {activeTab === 'help' && (
+            <HelpCenter onStartTour={() => setTourOpen(true)} onOpenChat={() => setChatOpen(true)} />
+          )}
+
           {activeTab === 'settings' && (
             <div className="bg-surface rounded-xl border border-gray-200 p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Settings</h2>
@@ -330,6 +355,14 @@ export default function DashboardPage() {
           )}
         </main>
       </div>
+
+      <HelpChat
+        open={chatOpen}
+        onOpenChange={setChatOpen}
+        onStartTour={() => setTourOpen(true)}
+        onOpenHelp={() => setActiveTab('help')}
+      />
+      <OnboardingTour open={tourOpen} onClose={handleTourClose} />
     </div>
   );
 }
