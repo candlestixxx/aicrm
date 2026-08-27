@@ -84,6 +84,9 @@ export async function POST(request: NextRequest) {
       description,
       status,
       listingAgentId,
+      contactId,
+      source,
+      mlsStatus,
     } = body;
 
     if (!address || !city || !state) {
@@ -111,6 +114,9 @@ export async function POST(request: NextRequest) {
         description: description || null,
         status: status || 'active',
         listingAgentId: listingAgentId || session.agentId,
+        contactId: contactId || null,
+        source: source || 'manual',
+        mlsStatus: mlsStatus || status || 'active',
       },
       include: { images: true },
     });
