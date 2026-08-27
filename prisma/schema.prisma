@@ -75,6 +75,7 @@ model Brokerage {
   agents      Agent[]
   contacts    Contact[]
   properties  Property[]
+  statusLogs  ListingStatusLog[]
   pipelines   Pipeline[]
   campaigns   Campaign[]
   workflows   Workflow[]
@@ -134,6 +135,7 @@ model Contact {
   zip           String?
   source        String?   // referral, website, zillow, open house, etc.
   tags          String    @default("[]") // JSON array of tags
+  properties    Property[]
   notes         String?
   isLead        Boolean   @default(false)
   createdAt     DateTime  @default(now())
@@ -213,7 +215,11 @@ model Property {
   lotSize         Float?
   yearBuilt       Int?
   description     String?
-  status          String    @default("active") // active, pending, sold, off_market
+  status          String    @default("active") // active | pending | sold | off_market | expired | canceled | unconditional_withdraw | conditional_withdraw
+  mlsStatus       String?   // raw status as delivered by the MLS/provider
+  source          String?   // manual | import | webhook | realcomp | other provider
+  lastSyncedAt    DateTime?
+  contactId       String?   // optional link to the contact/lead for this address
   listedDate      DateTime?
   soldDate        DateTime?
   soldPrice       Float?
@@ -223,7 +229,28 @@ model Property {
 
   brokerage       Brokerage @relation(fields: [brokerageId], references: [id], onDelete: Cascade)
   listingAgent    Agent?    @relation(fields: [listingAgentId], references: [id])
+  contact         Contact?  @relation(fields: [contactId], references: [id], onDelete: SetNull)
   images          PropertyImage[]
+  statusLogs      ListingStatusLog[]
+}
+
+model ListingStatusLog {
+  id             String   @id @default(uuid())
+  brokerageId    String
+  propertyId     String?
+  mlsNumber      String?
+  address        String?
+  previousStatus String?
+  newStatus      String
+  source         String   // manual | import | webhook | provider | sync
+  rawPayload     String?  // JSON of the raw provider/webhook payload
+  createdAt      DateTime @default(now())
+
+  brokerage      Brokerage @relation(fields: [brokerageId], references: [id], onDelete: Cascade)
+  property       Property? @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+
+  @@index([propertyId])
+  @@index([mlsNumber])
 }
 
 model PropertyImage {

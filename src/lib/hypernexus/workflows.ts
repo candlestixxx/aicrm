@@ -29,7 +29,8 @@ export type TriggerEvent =
   | 'lead_created'
   | 'lead_updated'
   | 'contact_created'
-  | 'task_completed';
+  | 'task_completed'
+  | 'listing_status_changed';
 
 export interface TriggerCondition {
   field: string;
@@ -359,5 +360,10 @@ export const TRIGGER_EVENTS: { value: TriggerEvent; label: string; description: 
     value: 'task_completed',
     label: 'Task Completed',
     description: 'Fires when a task is marked complete',
+  },
+  {
+    value: 'listing_status_changed',
+    label: 'Listing Status Changed',
+    description: 'Fires when a property listing status changes in the MLS/Realcomp (active, expired, canceled, withdrawn, pending, sold…)',
   },
 ];

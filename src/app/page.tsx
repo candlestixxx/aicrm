@@ -29,6 +29,7 @@ import ThemeSwitcher from '@/components/ThemeSwitcher';
 import HelpCenter from '@/components/HelpCenter';
 import HelpChat from '@/components/HelpChat';
 import OnboardingTour from '@/components/OnboardingTour';
+import ListingStatusPanel from '@/components/ListingStatusPanel';
 
 type Tab =
   | 'guide'
@@ -313,7 +314,12 @@ export default function DashboardPage() {
 
           {activeTab === 'tasks' && <TaskManager />}
 
-          {activeTab === 'properties' && <PropertyManager />}
+          {activeTab === 'properties' && (
+            <div className="space-y-6">
+              <ListingStatusPanel />
+              <PropertyManager />
+            </div>
+          )}
 
           {activeTab === 'campaigns' && <CampaignManager />}
 

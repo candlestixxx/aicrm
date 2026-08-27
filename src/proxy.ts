@@ -20,6 +20,7 @@ const PUBLIC_PATHS = [
   '/api/auth/reset-password',
   '/api/auth/verify-email',
   '/api/mcp',
+  '/api/webhooks/mls',
 ];
 
 export async function proxy(request: NextRequest) {
