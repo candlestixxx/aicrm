@@ -57,11 +57,12 @@ export async function POST(request: NextRequest) {
     }
   }
 
+  const provider = typeof body.provider === 'string' ? body.provider.trim() : undefined;
   const result = await applyListingStatusChange({
     propertyId: resolvedPropertyId,
     mlsNumber: mlsNumber,
     newRawStatus: status,
-    source: body.source ? String(body.source) : 'webhook',
+    source: body.source ? String(body.source) : provider ? `webhook:${provider}` : 'webhook',
     rawPayload: body,
   });
 

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/db/prisma';
 import { getSession } from '@/lib/auth/jwt';
 import { applyListingStatusChange, syncAllListings } from '@/lib/listing-sync';
+import { getListingProvider, listConfiguredProviders } from '@/lib/listing-providers';
 import { LISTING_STATUS_META } from '@/lib/listing-status';
 
 /** Live reporting: recent status changes + current listing-status breakdown. */
@@ -35,6 +36,7 @@ export async function GET() {
     log,
     totalListings: listings.length,
     listings,
+    providers: listConfiguredProviders(),
     byStatus: counts.map((c) => ({
       status: c.status,
       count: c._count,
@@ -55,6 +57,16 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json().catch(() => ({}));
+
+  // Test a provider connection: POST { testProvider, mlsNumber }
+  if (body.testProvider && typeof body.mlsNumber === 'string') {
+    const provider = getListingProvider(String(body.testProvider));
+    if (provider.id === 'none') {
+      return NextResponse.json({ error: `Provider "${body.testProvider}" is not configured` }, { status: 400 });
+    }
+    const raw = await provider.fetchStatus(body.mlsNumber);
+    return NextResponse.json({ provider: provider.id, mlsNumber: body.mlsNumber, status: raw, ok: raw != null });
+  }
 
   if (body.syncAll) {
     const summary = await syncAllListings(session.brokerageId!);

@@ -47,6 +47,9 @@ export default function PropertyManager() {
   const { data: contactsData } = useSWR<{
     contacts: { id: string; firstName: string; lastName: string }[];
   }>('/api/contacts?limit=100', fetcher);
+  const { data: syncData } = useSWR<{
+    providers: { id: string; name: string; type: string }[];
+  }>('/api/listings/sync', fetcher);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({
     address: '',
@@ -54,6 +57,7 @@ export default function PropertyManager() {
     state: '',
     zip: '',
     mlsNumber: '',
+    mlsProvider: '',
     propertyType: 'single_family',
     listPrice: '',
     bedrooms: '',
@@ -64,6 +68,7 @@ export default function PropertyManager() {
   });
 
   const contacts = contactsData?.contacts ?? [];
+  const providers = syncData?.providers ?? [];
 
   const properties = data?.properties ?? [];
 
@@ -76,6 +81,7 @@ export default function PropertyManager() {
         body: JSON.stringify({
           ...form,
           mlsNumber: form.mlsNumber || null,
+          mlsProvider: form.mlsProvider || null,
           contactId: form.contactId || null,
           listPrice: form.listPrice ? parseFloat(form.listPrice) : null,
           bedrooms: form.bedrooms ? parseInt(form.bedrooms) : null,
@@ -85,7 +91,7 @@ export default function PropertyManager() {
       });
       setShowForm(false);
       setForm({
-        address: '', city: '', state: '', zip: '', mlsNumber: '', propertyType: 'single_family',
+        address: '', city: '', state: '', zip: '', mlsNumber: '', mlsProvider: '', propertyType: 'single_family',
         listPrice: '', bedrooms: '', bathrooms: '', squareFeet: '', status: 'active', contactId: '',
       });
       mutate();
@@ -160,6 +166,18 @@ export default function PropertyManager() {
                 onChange={(e) => setForm({ ...form, mlsNumber: e.target.value })}
                 className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
               />
+              <select
+                value={form.mlsProvider}
+                onChange={(e) => setForm({ ...form, mlsProvider: e.target.value })}
+                className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+              >
+                <option value="">MLS provider (auto-detect)</option>
+                {providers.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
+                ))}
+              </select>
               <select
                 value={form.propertyType}
                 onChange={(e) => setForm({ ...form, propertyType: e.target.value })}

@@ -217,6 +217,7 @@ model Property {
   description     String?
   status          String    @default("active") // active | pending | sold | off_market | expired | canceled | unconditional_withdraw | conditional_withdraw
   mlsStatus       String?   // raw status as delivered by the MLS/provider
+  mlsProvider     String?   // which MLS this listing belongs to (realcomp, mimls, ...)
   source          String?   // manual | import | webhook | realcomp | other provider
   lastSyncedAt    DateTime?
   contactId       String?   // optional link to the contact/lead for this address

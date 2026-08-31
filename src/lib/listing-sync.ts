@@ -1,5 +1,6 @@
 import prisma from '@/lib/db/prisma';
 import { triggerWorkflows } from '@/lib/hypernexus/workflows';
+import { getListingProviders } from '@/lib/listing-providers';
 import {
   mapListingStatusToLeadStatus,
   normalizeListingStatus,
@@ -156,92 +157,14 @@ export async function applyListingStatusChange(input: {
   };
 }
 
-// ─── Provider adapters ──────────────────────────────────────────
-export interface ListingProvider {
-  name: string;
-  /** Return the current raw status for a listing, or null if it cannot be checked. */
-  fetchStatus(mlsNumber: string, address?: string): Promise<string | null>;
-}
+// ─── Provider adapters (see src/lib/listing-providers.ts) ────────
 
-/**
- * RealComp / MLS providers expose a lookup API. Wire your credentials here
- * (or via an env-configured provider) and `syncAllListings` will poll them.
- *
- * TODO(integration): adjust the endpoint + response field names to match
- * your RealComp RESO Web API / RETS schema exactly.
- */
-export const noopProvider: ListingProvider = {
-  name: 'none',
-  async fetchStatus() {
-    return null;
-  },
-};
-
-function basicAuth(username: string, password: string): string {
-  return 'Basic ' + Buffer.from(`${username}:${password}`).toString('base64');
-}
-
-/**
- * RealComp provider adapter (stub).
- *
- * Env:
- *   MLS_PROVIDER=realcomp
- *   REALCOMP_API_URL=https://api.realcomp.example.com
- *   REALCOMP_USERNAME=...
- *   REALCOMP_PASSWORD=...
- *   REALCOMP_LOOKUP_PATH=/listings/{mls}   (optional, `{mls}` is replaced)
- *
- * Returns the raw listing status string, or null if the listing can't be
- * checked (bad creds, network error, etc.).
- */
-export const realcompProvider: ListingProvider = {
-  name: 'realcomp',
-  async fetchStatus(mlsNumber) {
-    const base = process.env.REALCOMP_API_URL;
-    const username = process.env.REALCOMP_USERNAME;
-    const password = process.env.REALCOMP_PASSWORD;
-    if (!base || !username || !password) return null;
-
-    const pathTemplate = process.env.REALCOMP_LOOKUP_PATH || '/listings/{mls}';
-    const url = `${base.replace(/\/$/, '')}${pathTemplate.replace('{mls}', encodeURIComponent(mlsNumber))}`;
-
-    try {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 15000);
-      const res = await fetch(url, {
-        headers: { Authorization: basicAuth(username, password), Accept: 'application/json' },
-        signal: controller.signal,
-      });
-      clearTimeout(timeout);
-      if (!res.ok) return null;
-
-      const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
-      const status =
-        data.listingStatus ?? data.status ?? data.ListingStatus ?? data.listing_status;
-      return typeof status === 'string' && status.trim() ? status : null;
-    } catch {
-      return null;
-    }
-  },
-};
-
-/** Select a provider from the environment (e.g. MLS_PROVIDER=realcomp). */
-export function getListingProvider(): ListingProvider {
-  const name = (process.env.MLS_PROVIDER || 'none').toLowerCase();
-  switch (name) {
-    case 'realcomp':
-      return realcompProvider;
-    default:
-      return noopProvider;
-  }
-}
-
-/** Poll every property and apply any status change. Returns a summary. */
-export async function syncAllListings(brokerageId: string, provider?: ListingProvider) {
-  const p = provider || getListingProvider();
+/** Poll every property via its configured MLS provider and apply changes. */
+export async function syncAllListings(brokerageId: string) {
+  const providers = getListingProviders();
   const properties = await prisma.property.findMany({
     where: { brokerageId, mlsNumber: { not: null } },
-    select: { id: true, mlsNumber: true, address: true },
+    select: { id: true, mlsNumber: true, address: true, mlsProvider: true },
   });
 
   const results: StatusChangeResult[] = [];
@@ -249,17 +172,33 @@ export async function syncAllListings(brokerageId: string, provider?: ListingPro
   let changed = 0;
 
   for (const prop of properties) {
+    const provider = prop.mlsProvider ? providers[prop.mlsProvider] : undefined;
+    if (!provider) {
+      results.push({
+        changed: false,
+        propertyId: prop.id,
+        message: `Skipped ${prop.mlsNumber}: no provider${prop.mlsProvider ? ` "${prop.mlsProvider}"` : ''} configured`,
+      });
+      continue;
+    }
+
     try {
-      const raw = await p.fetchStatus(prop.mlsNumber!, prop.address);
+      const raw = await provider.fetchStatus(prop.mlsNumber!, prop.address);
       if (raw) {
         checked++;
         const result = await applyListingStatusChange({
           propertyId: prop.id,
           newRawStatus: raw,
-          source: `provider:${p.name}`,
+          source: `provider:${provider.id}`,
         });
         results.push(result);
         if (result.changed) changed++;
+      } else {
+        results.push({
+          changed: false,
+          propertyId: prop.id,
+          message: `No status returned from ${provider.name} for ${prop.mlsNumber}`,
+        });
       }
     } catch (err) {
       results.push({
@@ -270,5 +209,5 @@ export async function syncAllListings(brokerageId: string, provider?: ListingPro
     }
   }
 
-  return { provider: p.name, checked, changed, results };
+  return { providers: Object.keys(providers), checked, changed, results };
 }
