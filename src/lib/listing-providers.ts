@@ -1,23 +1,37 @@
 /**
- * MLS listing providers.
+ * MLS listing providers (multi-MLS).
  *
- * Supports multiple MLSs at once (Realcomp, MiMLS/Paragon, or any HTTP/RETS
- * provider). Providers are configured entirely via environment variables and
- * are NEVER hardcoded with credentials.
+ * Two adapter types:
+ *   - `http` — generic basic-auth JSON lookup (RESO Web API style)
+ *   - `rets` — full RETS login + DMQL search (Paragon / Realcomp style)
  *
- *   MLS_PROVIDERS="realcomp,mimls"            # comma-separated provider ids
+ * Providers are configured entirely via environment variables (never with
+ * hardcoded credentials).
  *
- * For each id `<id>`, set (id is uppercased in the env key):
- *   MLS_<ID>_NAME="Realcomp"                  # display name (optional)
- *   MLS_<ID>_API_URL="https://..."            # base API / RETS endpoint
- *   MLS_<ID>_USERNAME="..."                   # login
- *   MLS_<ID>_PASSWORD="..."                   # password
- *   MLS_<ID>_LOOKUP_PATH="/listings/{mls}"    # path template; `{mls}` replaced
- *   MLS_<ID>_TYPE="http"                      # adapter type (http for now)
+ *   MLS_PROVIDERS="realcomp,mimls"
  *
- * NOTE for Paragon MLSs (e.g. MiMLS): the RETS/Web API endpoint is a
- * dedicated API URL provided by the MLS tech support — NOT the web login
- * page (…/ParagonLS/Default.mvc/Login).
+ * Common (all types):
+ *   MLS_<ID>_NAME       display name
+ *   MLS_<ID>_TYPE       http | rets
+ *   MLS_<ID>_API_URL    base URL (http) or full RETS login URL (rets)
+ *   MLS_<ID>_USERNAME   account login
+ *   MLS_<ID>_PASSWORD   account password
+ *
+ * http type:
+ *   MLS_<ID>_LOOKUP_PATH   path template; `{mls}` is replaced
+ *
+ * rets type (Paragon/Realcomp RETS):
+ *   MLS_<ID>_UA             RETS user-agent string (e.g. "AiCRM/1.0")
+ *   MLS_<ID>_UA_PASSWORD    RETS user-agent password (assigned by the MLS)
+ *   MLS_<ID>_RETS_VERSION   e.g. "RETS/1.7.2"
+ *   MLS_<ID>_SEARCH_RESOURCE   e.g. "Property"
+ *   MLS_<ID>_SEARCH_CLASS      e.g. "RES"
+ *   MLS_<ID>_SEARCH_QUERY_FIELD  e.g. "MLNumber" or "ListingKey"
+ *   MLS_<ID>_STATUS_FIELD       e.g. "Status" or "ListingStatus"
+ *
+ * IMPORTANT for Paragon MLSs (MiMLS): the RETS login URL is a dedicated API
+ * URL issued by MiMLS tech support — NOT the web login page. RETS also
+ * usually uses a SEPARATE "user-agent password", not your web portal password.
  */
 
 export interface ListingProvider {
@@ -44,6 +58,14 @@ interface ProviderConfig {
   password: string;
   lookupPath: string;
   type: string;
+  // rets-specific
+  ua?: string;
+  uaPassword?: string;
+  retsVersion?: string;
+  searchResource?: string;
+  searchClass?: string;
+  queryField?: string;
+  statusField?: string;
 }
 
 function providerEnv(id: string, key: string): string | undefined {
@@ -75,9 +97,17 @@ function readConfig(id: string): ProviderConfig | null {
     password,
     lookupPath: providerEnv(id, 'LOOKUP_PATH') || '/listings/{mls}',
     type: (providerEnv(id, 'TYPE') || 'http').toLowerCase(),
+    ua: providerEnv(id, 'UA') || 'AiCRM/1.0',
+    uaPassword: providerEnv(id, 'UA_PASSWORD') || password,
+    retsVersion: providerEnv(id, 'RETS_VERSION') || 'RETS/1.7.2',
+    searchResource: providerEnv(id, 'SEARCH_RESOURCE') || 'Property',
+    searchClass: providerEnv(id, 'SEARCH_CLASS') || 'RES',
+    queryField: providerEnv(id, 'SEARCH_QUERY_FIELD') || 'MLNumber',
+    statusField: providerEnv(id, 'STATUS_FIELD') || 'Status',
   };
 }
 
+// ─── HTTP provider (RESO Web API / generic JSON) ──────────────
 function makeHttpProvider(cfg: ProviderConfig): ListingProvider {
   return {
     id: cfg.id,
@@ -112,12 +142,101 @@ function makeHttpProvider(cfg: ProviderConfig): ListingProvider {
   };
 }
 
+// ─── RETS provider (Paragon / Realcomp) ───────────────────────
+function retsHeaders(cfg: ProviderConfig, cookie?: string): Record<string, string> {
+  const ua = cfg.ua || 'AiCRM/1.0';
+  const headers: Record<string, string> = {
+    'RETS-Version': cfg.retsVersion || 'RETS/1.7.2',
+    'User-Agent': ua,
+    // Basic User-Agent auth. If MiMLS requires DIGEST UA auth instead, this
+    // is the one line to swap — see note in README/help (or use rets-client).
+    'RETS-UA-Authorization': basicAuth(ua, cfg.uaPassword || cfg.password),
+    Accept: '*/*',
+  };
+  if (cookie) headers.Cookie = cookie;
+  return headers;
+}
+
+/** Pull a capability URL out of a RETS login response body. */
+function extractCapability(xml: string, name: string): string | null {
+  const m = xml.match(new RegExp(`${name}\\s*=\\s*(\\S+)`));
+  return m ? m[1].trim() : null;
+}
+
+/** Pull the status value out of a COMPACT-DECODED RETS search result. */
+function extractStatus(text: string, field: string): string | null {
+  const lines = text.split(/[\r\n]+/).filter((l) => l.trim());
+  for (let i = 0; i < lines.length; i++) {
+    const cols = lines[i].split('\t');
+    const idx = cols.findIndex((c) => c.toLowerCase() === field.toLowerCase());
+    if (idx >= 0 && i + 1 < lines.length) {
+      const data = lines[i + 1].split('\t');
+      const value = data[idx];
+      return value ? value.trim() : null;
+    }
+  }
+  return null;
+}
+
+function makeRetsProvider(cfg: ProviderConfig): ListingProvider {
+  return {
+    id: cfg.id,
+    name: cfg.name,
+    type: cfg.type,
+    async fetchStatus(mlsNumber) {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 20000);
+      try {
+        // 1) Login — establishes a session cookie + returns capability URLs.
+        const loginRes = await fetch(cfg.apiUrl, {
+          headers: retsHeaders(cfg),
+          signal: controller.signal,
+        });
+        if (!loginRes.ok) return null;
+        const loginXml = await loginRes.text();
+        const cookie =
+          loginRes.headers.get('set-cookie')?.split(';')[0] || '';
+
+        // 2) Resolve the Search capability (or use the configured path).
+        const capability = extractCapability(loginXml, 'Search');
+        const base = new URL(cfg.apiUrl).origin;
+        const searchUrl = capability
+          ? new URL(capability, base).toString()
+          : `${base}${cfg.lookupPath.replace('{mls}', '')}`;
+
+        // 3) DMQL search for this listing.
+        const params = new URLSearchParams({
+          SearchType: cfg.searchResource || 'Property',
+          Class: cfg.searchClass || 'RES',
+          QueryType: 'DMQL2',
+          Query: `(${cfg.queryField || 'MLNumber'}=${mlsNumber})`,
+          Format: 'COMPACT-DECODED',
+          StandardNames: '1',
+          Limit: '1',
+        });
+        const searchRes = await fetch(`${searchUrl}?${params.toString()}`, {
+          headers: retsHeaders(cfg, cookie),
+          signal: controller.signal,
+        });
+        if (!searchRes.ok) return null;
+        const text = await searchRes.text();
+        return extractStatus(text, cfg.statusField || 'Status');
+      } catch {
+        return null;
+      } finally {
+        clearTimeout(timeout);
+      }
+    },
+  };
+}
+
 /** Return every provider that is fully configured in the environment. */
 export function getListingProviders(): Record<string, ListingProvider> {
   const providers: Record<string, ListingProvider> = {};
   for (const id of readProviderIds()) {
     const cfg = readConfig(id);
-    if (cfg) providers[id] = makeHttpProvider(cfg);
+    if (!cfg) continue;
+    providers[id] = cfg.type === 'rets' ? makeRetsProvider(cfg) : makeHttpProvider(cfg);
   }
   return providers;
 }
