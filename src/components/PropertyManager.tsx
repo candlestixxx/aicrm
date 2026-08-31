@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import useSWR from 'swr';
 import { Plus, Home, MapPin, DollarSign, BedDouble, Bath, Trash2 } from 'lucide-react';
+import { LISTING_STATUS_META } from '@/lib/listing-status';
 
 interface Property {
   id: string;
@@ -32,6 +33,10 @@ const STATUS_COLORS: Record<string, string> = {
   pending: 'bg-yellow-100 text-yellow-700',
   sold: 'bg-blue-100 text-blue-700',
   off_market: 'bg-gray-100 text-gray-600',
+  expired: 'bg-red-100 text-red-700',
+  canceled: 'bg-red-100 text-red-700',
+  unconditional_withdraw: 'bg-purple-100 text-purple-700',
+  conditional_withdraw: 'bg-purple-100 text-purple-700',
 };
 
 export default function PropertyManager() {
@@ -39,19 +44,26 @@ export default function PropertyManager() {
     '/api/properties?limit=50',
     fetcher
   );
+  const { data: contactsData } = useSWR<{
+    contacts: { id: string; firstName: string; lastName: string }[];
+  }>('/api/contacts?limit=100', fetcher);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({
     address: '',
     city: '',
     state: '',
     zip: '',
+    mlsNumber: '',
     propertyType: 'single_family',
     listPrice: '',
     bedrooms: '',
     bathrooms: '',
     squareFeet: '',
     status: 'active',
+    contactId: '',
   });
+
+  const contacts = contactsData?.contacts ?? [];
 
   const properties = data?.properties ?? [];
 
@@ -63,6 +75,8 @@ export default function PropertyManager() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...form,
+          mlsNumber: form.mlsNumber || null,
+          contactId: form.contactId || null,
           listPrice: form.listPrice ? parseFloat(form.listPrice) : null,
           bedrooms: form.bedrooms ? parseInt(form.bedrooms) : null,
           bathrooms: form.bathrooms ? parseFloat(form.bathrooms) : null,
@@ -71,8 +85,8 @@ export default function PropertyManager() {
       });
       setShowForm(false);
       setForm({
-        address: '', city: '', state: '', zip: '', propertyType: 'single_family',
-        listPrice: '', bedrooms: '', bathrooms: '', squareFeet: '', status: 'active',
+        address: '', city: '', state: '', zip: '', mlsNumber: '', propertyType: 'single_family',
+        listPrice: '', bedrooms: '', bathrooms: '', squareFeet: '', status: 'active', contactId: '',
       });
       mutate();
     } catch (err) {
@@ -139,6 +153,13 @@ export default function PropertyManager() {
                 onChange={(e) => setForm({ ...form, zip: e.target.value })}
                 className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
               />
+              <input
+                type="text"
+                placeholder="MLS Number (for auto status sync)"
+                value={form.mlsNumber}
+                onChange={(e) => setForm({ ...form, mlsNumber: e.target.value })}
+                className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+              />
               <select
                 value={form.propertyType}
                 onChange={(e) => setForm({ ...form, propertyType: e.target.value })}
@@ -184,10 +205,23 @@ export default function PropertyManager() {
                 onChange={(e) => setForm({ ...form, status: e.target.value })}
                 className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
               >
-                <option value="active">Active</option>
-                <option value="pending">Pending</option>
-                <option value="sold">Sold</option>
-                <option value="off_market">Off Market</option>
+                {LISTING_STATUS_META.map((m) => (
+                  <option key={m.value} value={m.value}>
+                    {m.label}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={form.contactId}
+                onChange={(e) => setForm({ ...form, contactId: e.target.value })}
+                className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+              >
+                <option value="">Link a contact/lead (optional)</option>
+                {contacts.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.firstName} {c.lastName}
+                  </option>
+                ))}
               </select>
             </div>
             <div className="flex gap-2 justify-end">
