@@ -3,7 +3,7 @@ import { Twilio } from "twilio";
 // These would normally be loaded from the Db/Vault for each tenant
 export async function sendSms(to: string, body: string, brokerageId: string) {
   // Mock implementation for now, in a real scenario you retrieve the tenant's twilio credentials
-  console.log(\Sending SMS to \: \ on behalf of brokerage \\);
+  console.log(`Sending SMS to ${to} on behalf of brokerage ${brokerageId}`);
   
   // const accountSid = getSecret(brokerageId, "TWILIO_SID");
   // const authToken = getSecret(brokerageId, "TWILIO_AUTH");

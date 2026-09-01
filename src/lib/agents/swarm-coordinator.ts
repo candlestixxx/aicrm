@@ -1,6 +1,6 @@
 export async function coordinateSwarm(taskType: string, payload: any) {
   // This module orchestrates multiple agents
-  console.log(\[Swarm Coordinator] Routing task: \\);
+  console.log(`[Swarm Coordinator] Routing task: ${taskType}`);
   
   if (taskType === 'enrich_lead') {
     // Route to Researcher Agent (Gemini Flash)

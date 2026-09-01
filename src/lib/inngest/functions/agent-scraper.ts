@@ -1,8 +1,7 @@
 import { inngest } from "../client";
 
 export const agentScraper = inngest.createFunction(
-  { id: "agent-scraper" },
-  { event: "agent/enrich.lead" },
+  { id: "agent-scraper", triggers: [{ event: "agent/enrich.lead" }] },
   async ({ event, step }) => {
     const { contactId, email, website } = event.data;
 
@@ -20,7 +19,7 @@ export const agentScraper = inngest.createFunction(
 
     await step.run("update-database", async () => {
       // Update Prisma with enriched data
-      console.log(\Updated \ with \\);
+      console.log(`Updated lead ${contactId} with ${JSON.stringify(enrichedData)}`);
     });
 
     return { success: true, enrichedData };

@@ -2,7 +2,7 @@ import { Resend } from "resend";
 
 export async function sendEmail(to: string, subject: string, html: string, brokerageId: string) {
   // Mock implementation
-  console.log(\Sending Email to \ (Subject: \) on behalf of \\);
+  console.log(`Sending Email to ${to} (Subject: ${subject}) on behalf of ${brokerageId}`);
   
   // const apiKey = getSecret(brokerageId, "RESEND_API_KEY");
   // const resend = new Resend(apiKey);

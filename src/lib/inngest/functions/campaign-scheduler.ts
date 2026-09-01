@@ -1,8 +1,7 @@
 import { inngest } from "../client";
 
 export const campaignScheduler = inngest.createFunction(
-  { id: "campaign-scheduler" },
-  { cron: "0 * * * *" }, // Run every hour
+  { id: "campaign-scheduler", triggers: [{ cron: "0 * * * *" }] }, // Run every hour
   async ({ step }) => {
     // 1. Fetch pending CampaignExecutionLog entries
     const pendingSteps = await step.run("fetch-pending-campaigns", async () => {
