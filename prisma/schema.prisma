@@ -80,6 +80,9 @@ model Brokerage {
   campaigns   Campaign[]
   workflows   Workflow[]
   secrets     Secret[]
+  approvalQueues ApprovalQueue[]
+  agentAuditLogs AgentAuditLog[]
+  vectorEmbeddings VectorEmbedding[]
 }
 
 model Team {
@@ -117,6 +120,8 @@ model Agent {
   tasks           Task[]
   listedProperties Property[]
   socialAccounts  SocialAccount[]
+  approvalQueues  ApprovalQueue[]
+  auditLogs       AgentAuditLog[]
 }
 
 // ─── Contacts & Leads ──────────────────────────────────────────
@@ -169,6 +174,7 @@ model Lead {
   contact       Contact       @relation(fields: [contactId], references: [id], onDelete: Cascade)
   pipeline      Pipeline?     @relation(fields: [pipelineId], references: [id])
   stage         PipelineStage? @relation(fields: [stageId], references: [id])
+  campaignExecutionLogs CampaignExecutionLog[]
 }
 
 // ─── Pipeline ──────────────────────────────────────────────────
@@ -326,6 +332,7 @@ model Campaign {
 
   brokerage   Brokerage  @relation(fields: [brokerageId], references: [id], onDelete: Cascade)
   steps       CampaignStep[]
+  executionLogs CampaignExecutionLog[]
 }
 
 model CampaignStep {
@@ -342,6 +349,7 @@ model CampaignStep {
   updatedAt   DateTime @updatedAt
 
   campaign    Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  executionLogs CampaignExecutionLog[]
 }
 
 // ─── Social Media OAuth ────────────────────────────────────────
@@ -401,4 +409,61 @@ model ApiKey {
   key       String   // AES-256-GCM encrypted
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+// ─── Agentic CRM Upgrades ──────────────────────────────────────
+
+model ApprovalQueue {
+  id          String   @id @default(uuid())
+  brokerageId String
+  agentId     String
+  actionType  String   // draft_email, update_contract, send_sms, post_social
+  payload     String   // JSON payload of the proposed action
+  status      String   @default("pending") // pending | approved | rejected
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  brokerage   Brokerage @relation(fields: [brokerageId], references: [id], onDelete: Cascade)
+  agent       Agent     @relation(fields: [agentId], references: [id], onDelete: Cascade)
+}
+
+model AgentAuditLog {
+  id          String   @id @default(uuid())
+  brokerageId String
+  agentId     String
+  taskId      String?
+  action      String
+  reasoning   String   // Chain of thought
+  metadata    String?  // JSON
+  createdAt   DateTime @default(now())
+
+  brokerage   Brokerage @relation(fields: [brokerageId], references: [id], onDelete: Cascade)
+  agent       Agent     @relation(fields: [agentId], references: [id], onDelete: Cascade)
+}
+
+model VectorEmbedding {
+  id          String   @id @default(uuid())
+  brokerageId String
+  sourceType  String   // email, note, property
+  sourceId    String
+  content     String
+  embedding   String   // JSON array of floats (fallback for SQLite, real implementation would use pgvector)
+  createdAt   DateTime @default(now())
+
+  brokerage   Brokerage @relation(fields: [brokerageId], references: [id], onDelete: Cascade)
+}
+
+model CampaignExecutionLog {
+  id             String   @id @default(uuid())
+  campaignId     String
+  campaignStepId String
+  leadId         String
+  status         String   @default("queued") // queued | processing | completed | failed
+  error          String?
+  executedAt     DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  campaign       Campaign     @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  campaignStep   CampaignStep @relation(fields: [campaignStepId], references: [id], onDelete: Cascade)
+  lead           Lead         @relation(fields: [leadId], references: [id], onDelete: Cascade)
 }
