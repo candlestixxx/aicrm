@@ -9,10 +9,116 @@ datasource db {
   provider = "postgresql"
 }
 
+// ----------------------------------------------------------------------------
+// Phase 2: Security Vault
+// ----------------------------------------------------------------------------
 model ApiKey {
   id        String   @id @default(uuid())
   provider  String   @unique
   key       String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// ----------------------------------------------------------------------------
+// Phase 3: Multi-Tenant Architecture
+// ----------------------------------------------------------------------------
+model Tenant {
+  id        String   @id @default(uuid())
+  name      String
+  domain    String?  @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  brokerages Brokerage[]
+  contacts   Contact[]
+  tags       Tag[]
+}
+
+model Brokerage {
+  id        String   @id @default(uuid())
+  tenantId  String
+  name      String
+  mlsId     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant    Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  agents    AgentProfile[]
+}
+
+model AgentProfile {
+  id          String   @id @default(uuid())
+  brokerageId String
+  userId      String   @unique // Link to an external auth provider ID in the future
+  firstName   String
+  lastName    String
+  email       String   @unique
+  phone       String?
+  licenseNo   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  brokerage   Brokerage @relation(fields: [brokerageId], references: [id], onDelete: Cascade)
+  contacts    Contact[] // Contacts assigned to this specific agent
+}
+
+// ----------------------------------------------------------------------------
+// Phase 3: Smart Contact Management
+// ----------------------------------------------------------------------------
+model Contact {
+  id           String   @id @default(uuid())
+  tenantId     String
+  agentId      String?
+  firstName    String
+  lastName     String?
+  email        String?
+  phone        String?
+  stage        String   @default("New Lead") // e.g. New Lead, Hot, Nurturing, Closed
+  source       String?
+  enrichedData Json?    // Stores data from the background web-scrubber
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  tenant       Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  agent        AgentProfile? @relation(fields: [agentId], references: [id], onDelete: SetNull)
+  tags         ContactTag[]
+  mlsData      MlsData?
+}
+
+model Tag {
+  id        String   @id @default(uuid())
+  tenantId  String
+  name      String
+  color     String?
+  createdAt DateTime @default(now())
+
+  tenant    Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  contacts  ContactTag[]
+
+  @@unique([tenantId, name])
+}
+
+model ContactTag {
+  contactId String
+  tagId     String
+
+  contact   Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  tag       Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([contactId, tagId])
+}
+
+// ----------------------------------------------------------------------------
+// Phase 3: Industry Compliance (MLS Data)
+// ----------------------------------------------------------------------------
+model MlsData {
+  id             String   @id @default(uuid())
+  contactId      String   @unique
+  mlsNumber      String?
+  propertyType   String?
+  searchCriteria Json?
+  lastActive     DateTime?
+
+  contact        Contact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
 }
