@@ -61,7 +61,6 @@ coverage/
 
 # AI tooling
 .agents/
-.claude/
 .windsurf/
 skills-lock.json
 
