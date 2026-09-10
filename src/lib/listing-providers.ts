@@ -2,8 +2,8 @@
  * MLS listing providers (multi-MLS).
  *
  * Two adapter types:
- *   - `http` — generic basic-auth JSON lookup (RESO Web API style)
- *   - `rets` — full RETS login + DMQL search (Paragon / Realcomp style)
+ *   - `http` — RESO Web API (REST/JSON, Bearer/API-key or basic auth)
+ *   - `rets` — legacy RETS login + DMQL search (Paragon / Realcomp)
  *
  * Providers are configured entirely via environment variables (never with
  * hardcoded credentials).
@@ -17,8 +17,10 @@
  *   MLS_<ID>_USERNAME   account login
  *   MLS_<ID>_PASSWORD   account password
  *
- * http type:
- *   MLS_<ID>_LOOKUP_PATH   path template; `{mls}` is replaced
+ * http type (RESO Web API):
+ *   MLS_<ID>_LOOKUP_PATH   path/query template; `{mls}` is replaced
+ *                         e.g. "/Property?$filter=ListingKey eq '{mls}'&$top=1"
+ *   MLS_<ID>_API_KEY      optional Bearer token (RESO OAuth2 / API key)
  *
  * rets type (Paragon/Realcomp RETS):
  *   MLS_<ID>_UA             RETS user-agent string (e.g. "AiCRM/1.0")
@@ -58,6 +60,7 @@ interface ProviderConfig {
   password: string;
   lookupPath: string;
   type: string;
+  apiKey?: string;
   // rets-specific
   ua?: string;
   uaPassword?: string;
@@ -86,17 +89,20 @@ function basicAuth(username: string, password: string): string {
 
 function readConfig(id: string): ProviderConfig | null {
   const apiUrl = providerEnv(id, 'API_URL');
-  const username = providerEnv(id, 'USERNAME');
-  const password = providerEnv(id, 'PASSWORD');
-  if (!apiUrl || !username || !password) return null;
+  if (!apiUrl) return null;
+  const apiKey = providerEnv(id, 'API_KEY');
+  const username = providerEnv(id, 'USERNAME') || '';
+  const password = providerEnv(id, 'PASSWORD') || '';
+  if (!apiKey && (!username || !password)) return null;
   return {
     id,
     name: providerEnv(id, 'NAME') || id,
     apiUrl,
     username,
     password,
-    lookupPath: providerEnv(id, 'LOOKUP_PATH') || '/listings/{mls}',
+    lookupPath: providerEnv(id, 'LOOKUP_PATH') || '/Property?$filter=ListingKey eq \'{mls}\'&$top=1',
     type: (providerEnv(id, 'TYPE') || 'http').toLowerCase(),
+    apiKey,
     ua: providerEnv(id, 'UA') || 'AiCRM/1.0',
     uaPassword: providerEnv(id, 'UA_PASSWORD') || password,
     retsVersion: providerEnv(id, 'RETS_VERSION') || 'RETS/1.7.2',
@@ -114,26 +120,33 @@ function makeHttpProvider(cfg: ProviderConfig): ListingProvider {
     name: cfg.name,
     type: cfg.type,
     async fetchStatus(mlsNumber) {
-      const url =
-        cfg.apiUrl.replace(/\/$/, '') +
-        cfg.lookupPath.replace('{mls}', encodeURIComponent(mlsNumber));
+      const path = cfg.lookupPath.replace('{mls}', encodeURIComponent(mlsNumber));
+      const base = cfg.apiUrl.endsWith('/') ? cfg.apiUrl : cfg.apiUrl + '/';
+      const url = new URL(path, base).toString();
+      const authorization = cfg.apiKey
+        ? `Bearer ${cfg.apiKey}`
+        : basicAuth(cfg.username, cfg.password);
 
       try {
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), 15000);
         const res = await fetch(url, {
-          headers: {
-            Authorization: basicAuth(cfg.username, cfg.password),
-            Accept: 'application/json',
-          },
+          headers: { Authorization: authorization, Accept: 'application/json' },
           signal: controller.signal,
         });
         clearTimeout(timeout);
         if (!res.ok) return null;
 
         const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+        // RESO Web API wraps list results in { "value": [ ... ] }.
+        let record: Record<string, unknown> = data;
+        const value = data.value;
+        if (Array.isArray(value) && value.length > 0) {
+          record = value[0] as Record<string, unknown>;
+        }
         const status =
-          data.listingStatus ?? data.status ?? data.ListingStatus ?? data.listing_status;
+          record.listingStatus ?? record.status ?? record.ListingStatus ??
+          record.listing_status ?? record.StandardStatus ?? record.MlsStatus ?? record.mlsStatus;
         return typeof status === 'string' && status.trim() ? status : null;
       } catch {
         return null;
