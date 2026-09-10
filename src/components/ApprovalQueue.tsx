@@ -1,3 +1,4 @@
+"use client";
 import React from 'react';
 
 export default function ApprovalQueue({ items, onApprove, onReject }: { items: any[], onApprove: (id: string) => void, onReject: (id: string) => void }) {

@@ -8,18 +8,18 @@ datasource db {
 
 // ─── Authentication ────────────────────────────────────────────
 model User {
-  id            String    @id @default(uuid())
-  email         String    @unique
-  passwordHash  String
-  name          String?
-  role          String    @default("agent") // agent | admin | brokerage_admin
-  avatarUrl     String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  name         String?
+  role         String   @default("agent") // agent | admin | brokerage_admin
+  avatarUrl    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  agentProfile  Agent?
-  accounts      Account[]
-  sessions      Session[]
+  agentProfile Agent?
+  accounts     Account[]
+  sessions     Session[]
 }
 
 model Account {
@@ -60,29 +60,30 @@ model VerificationToken {
 
 // ─── Multi-Tenant Hierarchy ────────────────────────────────────
 model Brokerage {
-  id          String   @id @default(uuid())
-  name        String
-  slug        String   @unique
-  logoUrl     String?
-  address     String?
-  phone       String?
-  website     String?
-  mlsId       String?  // MLS organization ID
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String   @id @default(uuid())
+  name      String
+  slug      String   @unique
+  logoUrl   String?
+  address   String?
+  phone     String?
+  website   String?
+  mlsId     String? // MLS organization ID
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  teams       Team[]
-  agents      Agent[]
-  contacts    Contact[]
-  properties  Property[]
-  statusLogs  ListingStatusLog[]
-  pipelines   Pipeline[]
-  campaigns   Campaign[]
-  workflows   Workflow[]
-  secrets     Secret[]
-  approvalQueues ApprovalQueue[]
-  agentAuditLogs AgentAuditLog[]
+  teams            Team[]
+  agents           Agent[]
+  contacts         Contact[]
+  properties       Property[]
+  statusLogs       ListingStatusLog[]
+  pipelines        Pipeline[]
+  campaigns        Campaign[]
+  workflows        Workflow[]
+  secrets          Secret[]
+  approvalQueues   ApprovalQueue[]
+  agentAuditLogs   AgentAuditLog[]
   vectorEmbeddings VectorEmbedding[]
+  segments         Segment[]
 }
 
 model Team {
@@ -93,63 +94,64 @@ model Team {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  brokerage   Brokerage @relation(fields: [brokerageId], references: [id], onDelete: Cascade)
-  leadAgent   Agent?    @relation("TeamLead", fields: [leadAgentId], references: [id])
-  agents      Agent[]   @relation("TeamMembers")
+  brokerage Brokerage @relation(fields: [brokerageId], references: [id], onDelete: Cascade)
+  leadAgent Agent?    @relation("TeamLead", fields: [leadAgentId], references: [id])
+  agents    Agent[]   @relation("TeamMembers")
 }
 
 model Agent {
-  id           String   @id @default(uuid())
-  userId       String   @unique
-  brokerageId  String
-  teamId       String?
-  licenseNumber String?
-  mlsAgentId   String?
-  title        String?
-  phone        String?
-  bio          String?
-  commissionSplit Float? @default(70.0)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  brokerageId     String
+  teamId          String?
+  licenseNumber   String?
+  mlsAgentId      String?
+  title           String?
+  phone           String?
+  bio             String?
+  commissionSplit Float?   @default(70.0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
-  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  brokerage       Brokerage        @relation(fields: [brokerageId], references: [id], onDelete: Cascade)
-  team            Team?            @relation("TeamMembers", fields: [teamId], references: [id])
-  ledTeam         Team?            @relation("TeamLead")
-  contacts        Contact[]
-  tasks           Task[]
+  user             User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  brokerage        Brokerage       @relation(fields: [brokerageId], references: [id], onDelete: Cascade)
+  team             Team?           @relation("TeamMembers", fields: [teamId], references: [id])
+  ledTeam          Team?           @relation("TeamLead")
+  contacts         Contact[]
+  tasks            Task[]
   listedProperties Property[]
-  socialAccounts  SocialAccount[]
-  approvalQueues  ApprovalQueue[]
-  auditLogs       AgentAuditLog[]
+  socialAccounts   SocialAccount[]
+  approvalQueues   ApprovalQueue[]
+  auditLogs        AgentAuditLog[]
+  segments         Segment[]
 }
 
 // ─── Contacts & Leads ──────────────────────────────────────────
 model Contact {
-  id            String    @id @default(uuid())
-  brokerageId   String
+  id              String     @id @default(uuid())
+  brokerageId     String
   assignedAgentId String?
-  firstName     String
-  lastName      String
-  email         String?
-  phone         String?
-  phone2        String?
-  address       String?
-  city          String?
-  state         String?
-  zip           String?
-  source        String?   // referral, website, zillow, open house, etc.
-  tags          String    @default("[]") // JSON array of tags
-  properties    Property[]
-  notes         String?
-  isLead        Boolean   @default(false)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  firstName       String
+  lastName        String
+  email           String?
+  phone           String?
+  phone2          String?
+  address         String?
+  city            String?
+  state           String?
+  zip             String?
+  source          String? // referral, website, zillow, open house, etc.
+  tags            String     @default("[]") // JSON array of tags
+  properties      Property[]
+  notes           String?
+  isLead          Boolean    @default(false)
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
 
-  brokerage     Brokerage  @relation(fields: [brokerageId], references: [id], onDelete: Cascade)
-  assignedAgent Agent?     @relation(fields: [assignedAgentId], references: [id])
-  lead          Lead?
-  activities    Activity[]
+  brokerage      Brokerage       @relation(fields: [brokerageId], references: [id], onDelete: Cascade)
+  assignedAgent  Agent?          @relation(fields: [assignedAgentId], references: [id])
+  lead           Lead?
+  activities     Activity[]
   communications Communication[]
   tasks          Task[]          @relation("TaskContact")
 }
@@ -163,17 +165,17 @@ model Lead {
   score         Int       @default(0)
   budgetMin     Float?
   budgetMax     Float?
-  propertyType  String?   // single_family, condo, multi_family, land, commercial
-  timeline      String?   // immediate, 1-3mo, 3-6mo, 6-12mo, 12mo+
+  propertyType  String? // single_family, condo, multi_family, land, commercial
+  timeline      String? // immediate, 1-3mo, 3-6mo, 6-12mo, 12mo+
   preApproved   Boolean   @default(false)
   lastContacted DateTime?
   nextFollowUp  DateTime?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  contact       Contact       @relation(fields: [contactId], references: [id], onDelete: Cascade)
-  pipeline      Pipeline?     @relation(fields: [pipelineId], references: [id])
-  stage         PipelineStage? @relation(fields: [stageId], references: [id])
+  contact               Contact                @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  pipeline              Pipeline?              @relation(fields: [pipelineId], references: [id])
+  stage                 PipelineStage?         @relation(fields: [stageId], references: [id])
   campaignExecutionLogs CampaignExecutionLog[]
 }
 
@@ -186,59 +188,59 @@ model Pipeline {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  brokerage   Brokerage       @relation(fields: [brokerageId], references: [id], onDelete: Cascade)
-  stages      PipelineStage[]
-  leads       Lead[]
+  brokerage Brokerage       @relation(fields: [brokerageId], references: [id], onDelete: Cascade)
+  stages    PipelineStage[]
+  leads     Lead[]
 }
 
 model PipelineStage {
   id         String   @id @default(uuid())
   pipelineId String
-  name       String   // New Lead, Contacted, Showing Scheduled, Offer Made, Negotiation, Closed
+  name       String // New Lead, Contacted, Showing Scheduled, Offer Made, Negotiation, Closed
   order      Int
-  color      String?  // hex color for kanban
+  color      String? // hex color for kanban
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  pipeline   Pipeline @relation(fields: [pipelineId], references: [id], onDelete: Cascade)
-  leads      Lead[]
+  pipeline Pipeline @relation(fields: [pipelineId], references: [id], onDelete: Cascade)
+  leads    Lead[]
 }
 
 // ─── Properties (MLS-compliant) ────────────────────────────────
 model Property {
-  id              String    @id @default(uuid())
-  brokerageId     String
-  mlsNumber       String?   @unique
-  address         String
-  city            String
-  state           String
-  zip             String
-  propertyType    String    // single_family, condo, multi_family, land, commercial
-  listPrice       Float?
-  bedrooms        Int?
-  bathrooms       Float?
-  squareFeet      Int?
-  lotSize         Float?
-  yearBuilt       Int?
-  description     String?
-  status          String    @default("active") // active | pending | sold | off_market | expired | canceled | unconditional_withdraw | conditional_withdraw
-  mlsStatus       String?   // raw status as delivered by the MLS/provider
-  mlsProvider     String?   // which MLS this listing belongs to (realcomp, mimls, ...)
-  source          String?   // manual | import | webhook | realcomp | other provider
-  lastSyncedAt    DateTime?
-  contactId       String?   // optional link to the contact/lead for this address
-  listedDate      DateTime?
-  soldDate        DateTime?
-  soldPrice       Float?
-  listingAgentId  String?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id             String    @id @default(uuid())
+  brokerageId    String
+  mlsNumber      String?   @unique
+  address        String
+  city           String
+  state          String
+  zip            String
+  propertyType   String // single_family, condo, multi_family, land, commercial
+  listPrice      Float?
+  bedrooms       Int?
+  bathrooms      Float?
+  squareFeet     Int?
+  lotSize        Float?
+  yearBuilt      Int?
+  description    String?
+  status         String    @default("active") // active | pending | sold | off_market | expired | canceled | unconditional_withdraw | conditional_withdraw
+  mlsStatus      String? // raw status as delivered by the MLS/provider
+  mlsProvider    String? // which MLS this listing belongs to (realcomp, mimls, ...)
+  source         String? // manual | import | webhook | realcomp | other provider
+  lastSyncedAt   DateTime?
+  contactId      String? // optional link to the contact/lead for this address
+  listedDate     DateTime?
+  soldDate       DateTime?
+  soldPrice      Float?
+  listingAgentId String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
-  brokerage       Brokerage @relation(fields: [brokerageId], references: [id], onDelete: Cascade)
-  listingAgent    Agent?    @relation(fields: [listingAgentId], references: [id])
-  contact         Contact?  @relation(fields: [contactId], references: [id], onDelete: SetNull)
-  images          PropertyImage[]
-  statusLogs      ListingStatusLog[]
+  brokerage    Brokerage          @relation(fields: [brokerageId], references: [id], onDelete: Cascade)
+  listingAgent Agent?             @relation(fields: [listingAgentId], references: [id])
+  contact      Contact?           @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  images       PropertyImage[]
+  statusLogs   ListingStatusLog[]
 }
 
 model ListingStatusLog {
@@ -249,27 +251,27 @@ model ListingStatusLog {
   address        String?
   previousStatus String?
   newStatus      String
-  source         String   // manual | import | webhook | provider | sync
-  rawPayload     String?  // JSON of the raw provider/webhook payload
+  source         String // manual | import | webhook | provider | sync
+  rawPayload     String? // JSON of the raw provider/webhook payload
   createdAt      DateTime @default(now())
 
-  brokerage      Brokerage @relation(fields: [brokerageId], references: [id], onDelete: Cascade)
-  property       Property? @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+  brokerage Brokerage @relation(fields: [brokerageId], references: [id], onDelete: Cascade)
+  property  Property? @relation(fields: [propertyId], references: [id], onDelete: SetNull)
 
   @@index([propertyId])
   @@index([mlsNumber])
 }
 
 model PropertyImage {
-  id          String   @id @default(uuid())
-  propertyId  String
-  url         String
-  caption     String?
-  isPrimary   Boolean  @default(false)
-  order       Int      @default(0)
-  createdAt   DateTime @default(now())
+  id         String   @id @default(uuid())
+  propertyId String
+  url        String
+  caption    String?
+  isPrimary  Boolean  @default(false)
+  order      Int      @default(0)
+  createdAt  DateTime @default(now())
 
-  property    Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
 }
 
 // ─── Activities & Tasks ────────────────────────────────────────
@@ -286,86 +288,86 @@ model Task {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  agent       Agent     @relation(fields: [agentId], references: [id], onDelete: Cascade)
-  contact     Contact?  @relation("TaskContact", fields: [contactId], references: [id])
+  agent   Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  contact Contact? @relation("TaskContact", fields: [contactId], references: [id])
 }
 
 model Activity {
   id          String   @id @default(uuid())
   contactId   String
-  type        String   // note, call, email, sms, meeting, showing, status_change
+  type        String // note, call, email, sms, meeting, showing, status_change
   description String
-  metadata    String?  // JSON for extra context
+  metadata    String? // JSON for extra context
   createdAt   DateTime @default(now())
 
-  contact     Contact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  contact Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
 }
 
 model Communication {
-  id          String   @id @default(uuid())
+  id          String    @id @default(uuid())
   contactId   String
-  direction   String   @default("outbound") // inbound | outbound
-  channel     String   // sms | email | voice
+  direction   String    @default("outbound") // inbound | outbound
+  channel     String // sms | email | voice
   subject     String?
   body        String
-  status      String   @default("sent") // queued | sent | delivered | failed | received
-  metadata    String?  // JSON: delivery status, provider message ID, etc.
-  sentAt      DateTime @default(now())
+  status      String    @default("sent") // queued | sent | delivered | failed | received
+  metadata    String? // JSON: delivery status, provider message ID, etc.
+  sentAt      DateTime  @default(now())
   deliveredAt DateTime?
 
-  contact     Contact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  contact Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
 }
 
 // ─── Marketing Campaigns ───────────────────────────────────────
 model Campaign {
-  id          String   @id @default(uuid())
+  id          String    @id @default(uuid())
   brokerageId String
   name        String
   description String?
-  type        String   @default("drip") // drip, blast, nurture, event
-  channel     String   @default("email") // email | sms | both
-  status      String   @default("draft") // draft | active | paused | completed
+  type        String    @default("drip") // drip, blast, nurture, event
+  channel     String    @default("email") // email | sms | both
+  status      String    @default("draft") // draft | active | paused | completed
   startDate   DateTime?
   endDate     DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
-  brokerage   Brokerage  @relation(fields: [brokerageId], references: [id], onDelete: Cascade)
-  steps       CampaignStep[]
+  brokerage     Brokerage              @relation(fields: [brokerageId], references: [id], onDelete: Cascade)
+  steps         CampaignStep[]
   executionLogs CampaignExecutionLog[]
 }
 
 model CampaignStep {
-  id          String   @id @default(uuid())
-  campaignId  String
-  name        String
-  order       Int
-  delayHours  Int      @default(0) // hours to wait after previous step
-  channel     String   @default("email") // email | sms
-  subject     String?  // email subject
-  body        String   // template body
-  condition   String?  // JSON condition for branching (e.g., did they open previous email?)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         String   @id @default(uuid())
+  campaignId String
+  name       String
+  order      Int
+  delayHours Int      @default(0) // hours to wait after previous step
+  channel    String   @default("email") // email | sms
+  subject    String? // email subject
+  body       String // template body
+  condition  String? // JSON condition for branching (e.g., did they open previous email?)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
-  campaign    Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  campaign      Campaign               @relation(fields: [campaignId], references: [id], onDelete: Cascade)
   executionLogs CampaignExecutionLog[]
 }
 
 // ─── Social Media OAuth ────────────────────────────────────────
 model SocialAccount {
-  id          String   @id @default(uuid())
-  agentId     String
-  platform    String   // facebook, instagram, linkedin, youtube, google_business
-  accessToken String   // encrypted
+  id           String    @id @default(uuid())
+  agentId      String
+  platform     String // facebook, instagram, linkedin, youtube, google_business
+  accessToken  String // encrypted
   refreshToken String?
-  expiresAt   DateTime?
-  pageId      String?
-  pageName    String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  expiresAt    DateTime?
+  pageId       String?
+  pageName     String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
-  agent       Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  agent Agent @relation(fields: [agentId], references: [id], onDelete: Cascade)
 
   @@unique([agentId, platform])
 }
@@ -381,49 +383,50 @@ model Secret {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  brokerage   Brokerage @relation(fields: [brokerageId], references: [id], onDelete: Cascade)
+  brokerage Brokerage @relation(fields: [brokerageId], references: [id], onDelete: Cascade)
 
   @@index([brokerageId, category])
 }
 
 model Workflow {
-  id               String   @id @default(uuid())
+  id               String    @id @default(uuid())
   brokerageId      String
   name             String
   description      String?
   triggerEvent     String
   triggerCondition String?
   actions          String
-  status           String   @default("active")
-  runCount         Int      @default(0)
+  status           String    @default("active")
+  runCount         Int       @default(0)
   lastRunAt        DateTime?
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
-  brokerage        Brokerage @relation(fields: [brokerageId], references: [id], onDelete: Cascade)
+  brokerage Brokerage @relation(fields: [brokerageId], references: [id], onDelete: Cascade)
 }
 
 model ApiKey {
   id        String   @id @default(uuid())
   provider  String   @unique
-  key       String   // AES-256-GCM encrypted
+  key       String // AES-256-GCM encrypted
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
 // ─── Agentic CRM Upgrades ──────────────────────────────────────
 
 model ApprovalQueue {
   id          String   @id @default(uuid())
   brokerageId String
   agentId     String
-  actionType  String   // draft_email, update_contract, send_sms, post_social
-  payload     String   // JSON payload of the proposed action
+  actionType  String // draft_email, update_contract, send_sms, post_social
+  payload     String // JSON payload of the proposed action
   status      String   @default("pending") // pending | approved | rejected
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  brokerage   Brokerage @relation(fields: [brokerageId], references: [id], onDelete: Cascade)
-  agent       Agent     @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  brokerage Brokerage @relation(fields: [brokerageId], references: [id], onDelete: Cascade)
+  agent     Agent     @relation(fields: [agentId], references: [id], onDelete: Cascade)
 }
 
 model AgentAuditLog {
@@ -432,38 +435,53 @@ model AgentAuditLog {
   agentId     String
   taskId      String?
   action      String
-  reasoning   String   // Chain of thought
-  metadata    String?  // JSON
+  reasoning   String // Chain of thought
+  metadata    String? // JSON
   createdAt   DateTime @default(now())
 
-  brokerage   Brokerage @relation(fields: [brokerageId], references: [id], onDelete: Cascade)
-  agent       Agent     @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  brokerage Brokerage @relation(fields: [brokerageId], references: [id], onDelete: Cascade)
+  agent     Agent     @relation(fields: [agentId], references: [id], onDelete: Cascade)
 }
 
 model VectorEmbedding {
   id          String   @id @default(uuid())
   brokerageId String
-  sourceType  String   // email, note, property
+  sourceType  String // email, note, property
   sourceId    String
   content     String
-  embedding   String   // JSON array of floats (fallback for SQLite, real implementation would use pgvector)
+  embedding   String // JSON array of floats (fallback for SQLite, real implementation would use pgvector)
   createdAt   DateTime @default(now())
 
-  brokerage   Brokerage @relation(fields: [brokerageId], references: [id], onDelete: Cascade)
+  brokerage Brokerage @relation(fields: [brokerageId], references: [id], onDelete: Cascade)
 }
 
 model CampaignExecutionLog {
-  id             String   @id @default(uuid())
+  id             String    @id @default(uuid())
   campaignId     String
   campaignStepId String
   leadId         String
-  status         String   @default("queued") // queued | processing | completed | failed
+  status         String    @default("queued") // queued | processing | completed | failed
   error          String?
   executedAt     DateTime?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
-  campaign       Campaign     @relation(fields: [campaignId], references: [id], onDelete: Cascade)
-  campaignStep   CampaignStep @relation(fields: [campaignStepId], references: [id], onDelete: Cascade)
-  lead           Lead         @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  campaign     Campaign     @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  campaignStep CampaignStep @relation(fields: [campaignStepId], references: [id], onDelete: Cascade)
+  lead         Lead         @relation(fields: [leadId], references: [id], onDelete: Cascade)
+}
+
+model Segment {
+  id          String   @id @default(uuid())
+  brokerageId String
+  agentId     String?
+  name        String
+  description String?
+  filters     String // JSON containing the filter criteria
+  isGlobal    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  brokerage Brokerage @relation(fields: [brokerageId], references: [id], onDelete: Cascade)
+  agent     Agent?    @relation(fields: [agentId], references: [id], onDelete: SetNull)
 }

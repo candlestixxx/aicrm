@@ -30,6 +30,8 @@ import HelpCenter from '@/components/HelpCenter';
 import HelpChat from '@/components/HelpChat';
 import OnboardingTour from '@/components/OnboardingTour';
 import ListingStatusPanel from '@/components/ListingStatusPanel';
+import CoworkDashboard from '@/components/CoworkDashboard';
+import SegmentsPage from '@/components/SegmentsPage';
 
 type Tab =
   | 'guide'
@@ -42,6 +44,8 @@ type Tab =
   | 'campaigns'
   | 'team'
   | 'hypernexus'
+  | 'cowork'
+  | 'segments'
   | 'models'
   | 'vault'
   | 'help'
@@ -100,11 +104,13 @@ export default function DashboardPage() {
   };
 
   const tabs: { key: Tab; label: string; icon: React.ReactNode }[] = [
+    { key: 'cowork', label: 'Cowork', icon: <Sparkles className="w-5 h-5" /> },
     { key: 'guide', label: 'Guide & Demo', icon: <BookOpen className="w-5 h-5" /> },
     { key: 'assistant', label: 'AI Assistant', icon: <Sparkles className="w-5 h-5" /> },
     { key: 'dashboard', label: 'Dashboard', icon: <Home className="w-5 h-5" /> },
     { key: 'hypernexus', label: 'HyperNexus', icon: <Sparkles className="w-5 h-5" /> },
     { key: 'contacts', label: 'Contacts', icon: <Users className="w-5 h-5" /> },
+    { key: 'segments', label: 'Segments', icon: <Users className="w-5 h-5" /> },
     { key: 'pipeline', label: 'Pipeline', icon: <TrendingUp className="w-5 h-5" /> },
     { key: 'tasks', label: 'Tasks', icon: <CheckSquare className="w-5 h-5" /> },
     { key: 'properties', label: 'Properties', icon: <Building2 className="w-5 h-5" /> },
@@ -205,6 +211,8 @@ export default function DashboardPage() {
 
         {/* Page Content */}
         <main className="flex-1 p-6 overflow-auto">
+          {activeTab === 'cowork' && <CoworkDashboard />}
+          
           {activeTab === 'guide' && <UserGuide />}
 
           {activeTab === 'assistant' && <AssistantPanel />}
@@ -309,6 +317,8 @@ export default function DashboardPage() {
           )}
 
           {activeTab === 'contacts' && <ContactList />}
+
+          {activeTab === 'segments' && <SegmentsPage />}
 
           {activeTab === 'pipeline' && <PipelineBoard />}
 
