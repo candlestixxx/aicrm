@@ -1,6 +1,13 @@
 import React from 'react';
 
-export default function AgentAuditPanel({ logs }: { logs: any[] }) {
+interface AuditLog {
+  id: string;
+  action: string;
+  reasoning: string;
+  createdAt: string | Date;
+}
+
+export default function AgentAuditPanel({ logs }: { logs: AuditLog[] }) {
   return (
     <div className="p-4 border rounded-md shadow-sm bg-gray-50">
       <h3 className="text-lg font-semibold mb-4">Agent Chain of Thought</h3>

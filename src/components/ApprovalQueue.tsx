@@ -1,7 +1,13 @@
 "use client";
 import React from 'react';
 
-export default function ApprovalQueue({ items, onApprove, onReject }: { items: any[], onApprove: (id: string) => void, onReject: (id: string) => void }) {
+interface ApprovalItem {
+  id: string;
+  actionType: string;
+  payload: string;
+}
+
+export default function ApprovalQueue({ items, onApprove, onReject }: { items: ApprovalItem[], onApprove: (id: string) => void, onReject: (id: string) => void }) {
   if (items.length === 0) {
     return <div className="text-gray-500 italic p-4">No pending actions requiring approval.</div>;
   }

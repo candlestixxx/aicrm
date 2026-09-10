@@ -1,4 +1,4 @@
-import { Resend } from "resend";
+// import { Resend } from "resend"; // uncomment when wiring real delivery
 
 export async function sendEmail(to: string, subject: string, html: string, brokerageId: string) {
   // Mock implementation

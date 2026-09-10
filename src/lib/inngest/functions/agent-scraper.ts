@@ -3,7 +3,9 @@ import { inngest } from "../client";
 export const agentScraper = inngest.createFunction(
   { id: "agent-scraper", triggers: [{ event: "agent/enrich.lead" }] },
   async ({ event, step }) => {
-    const { contactId, email, website } = event.data;
+    // contactId drives the lookup; event.data.email / event.data.website are
+    // available for the enrichment provider once wired.
+    const { contactId } = event.data;
 
     // Simulate scraping and reasoning that takes minutes
     await step.sleep("wait-for-scraping", "2m");

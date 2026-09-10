@@ -1,4 +1,4 @@
-import { Twilio } from "twilio";
+// import { Twilio } from "twilio"; // uncomment when wiring real SMS
 
 // These would normally be loaded from the Db/Vault for each tenant
 export async function sendSms(to: string, body: string, brokerageId: string) {

@@ -4,13 +4,13 @@ export const campaignScheduler = inngest.createFunction(
   { id: "campaign-scheduler", triggers: [{ cron: "0 * * * *" }] }, // Run every hour
   async ({ step }) => {
     // 1. Fetch pending CampaignExecutionLog entries
-    const pendingSteps = await step.run("fetch-pending-campaigns", async () => {
+    const pendingSteps: { id: string }[] = await step.run("fetch-pending-campaigns", async () => {
       // Prisma call would go here
-      return []; 
+      return [] as { id: string }[];
     });
 
     // 2. Dispatch sub-events for each to execute them in parallel
-    const events = pendingSteps.map((step: any) => ({
+    const events = pendingSteps.map((step) => ({
       name: "campaign/execute.step",
       data: { executionLogId: step.id }
     }));
