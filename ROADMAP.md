@@ -8,10 +8,10 @@
 - [ ] Ensure strict data isolation between tenants.
 
 ## Phase 4: Agentic Automation Engine (GoHighLevel Parity)
-- [ ] Replace visual node graphs with NLP-driven workflows in the backend.
-- [ ] Build the Workflow Engine backend to handle triggers (SMS, tags, forms).
-- [ ] Develop the natural-language prompt interface in the frontend.
-- [ ] Integrate Drip/Smart Campaigns for email and SMS outreach.
+- [x] Replace visual node graphs with NLP-driven workflows in the backend.
+- [x] Build the Workflow Engine backend to handle triggers (SMS, tags, forms).
+- [x] Develop the natural-language prompt interface in the frontend.
+- [x] Integrate Drip/Smart Campaigns for email and SMS outreach.
 
 ## Phase 5: Marketing & Social Studio
 - [ ] Build the Landing Page/Funnel builder for custom single-property sites.

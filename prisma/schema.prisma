@@ -122,3 +122,63 @@ model MlsData {
 
   contact        Contact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
 }
+
+// ----------------------------------------------------------------------------
+// Phase 4: Agentic Automation Engine
+// ----------------------------------------------------------------------------
+model Workflow {
+  id          String   @id @default(uuid())
+  tenantId    String
+  name        String
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  triggers    WorkflowTrigger[]
+  actions     WorkflowAction[]
+}
+
+model WorkflowTrigger {
+  id         String   @id @default(uuid())
+  workflowId String
+  type       String   // e.g., 'TAG_ADDED', 'INCOMING_SMS', 'FORM_SUBMITTED'
+  config     Json?    // Optional configuration, e.g., { "tagName": "Hot Lead" }
+  createdAt  DateTime @default(now())
+
+  workflow   Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+}
+
+model WorkflowAction {
+  id         String   @id @default(uuid())
+  workflowId String
+  type       String   // e.g., 'UPDATE_STAGE', 'SEND_EMAIL', 'START_CAMPAIGN'
+  config     Json?    // Optional configuration, e.g., { "stage": "Nurturing" }
+  orderIndex Int      @default(0) // For sequential execution
+  createdAt  DateTime @default(now())
+
+  workflow   Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+}
+
+model Campaign {
+  id          String   @id @default(uuid())
+  tenantId    String
+  name        String
+  status      String   @default("DRAFT") // DRAFT, ACTIVE, PAUSED
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  steps       CampaignStep[]
+}
+
+model CampaignStep {
+  id          String   @id @default(uuid())
+  campaignId  String
+  type        String   // EMAIL, SMS, TASK
+  content     String?  // Template string or instruction for AI
+  delayHours  Int      @default(0) // Delay from previous step
+  orderIndex  Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  campaign    Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+}

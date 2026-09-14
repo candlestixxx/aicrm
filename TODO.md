@@ -1,11 +1,8 @@
-# Short-Term TODOs (Phase 3)
+# Short-Term TODOs (Phase 5)
 
-- [ ] Modify `prisma/schema.prisma` to include multi-tenant models (`Tenant`, `Brokerage`, `AgentProfile`).
-- [ ] Modify `prisma/schema.prisma` to include contact models (`Contact`, `Tag`, `ContactTag`, `MlsData`).
+- [ ] Modify `prisma/schema.prisma` to include landing page and social media models.
 - [ ] Run `npx prisma generate` to validate the new schema.
-- [ ] Create `src/app/api/contacts/route.ts` with basic GET/POST REST logic, ensuring tenant data isolation.
-- [ ] Implement Smart Filter segment logic in the API.
-- [ ] Create `src/lib/agents/enrichment.ts` with the background web-scrubbing logic.
-- [ ] Create `src/components/ContactManager.tsx` UI for viewing, tagging, and filtering leads.
-- [ ] Embed the `ContactManager` into `src/app/page.tsx` for easy frontend testing.
+- [ ] Implement Landing Page/Funnel builder APIs.
+- [ ] Integrate OAuth flows for social platforms.
+- [ ] Develop the Agentic Content Creator loop logic.
 - [ ] Complete frontend visual verification using Playwright.
