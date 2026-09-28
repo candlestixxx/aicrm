@@ -1,8 +1,7 @@
-# Short-Term TODOs (Phase 5)
+# Short-Term TODOs (Phase 6)
 
-- [ ] Modify `prisma/schema.prisma` to include landing page and social media models.
+- [ ] Implement database tables for telephony states, call logs, and transcriptions.
 - [ ] Run `npx prisma generate` to validate the new schema.
-- [ ] Implement Landing Page/Funnel builder APIs.
-- [ ] Integrate OAuth flows for social platforms.
-- [ ] Develop the Agentic Content Creator loop logic.
+- [ ] Open WebRTC websocket endpoints for bi-directional audio streams.
+- [ ] Connect the upcoming LEADG AI voice dialer architecture.
 - [ ] Complete frontend visual verification using Playwright.

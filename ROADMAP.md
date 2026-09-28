@@ -14,9 +14,9 @@
 - [x] Integrate Drip/Smart Campaigns for email and SMS outreach.
 
 ## Phase 5: Marketing & Social Studio
-- [ ] Build the Landing Page/Funnel builder for custom single-property sites.
-- [ ] Integrate OAuth flows for Facebook, Instagram, LinkedIn, YouTube, and GMB.
-- [ ] Deploy the Agentic Content Creator loop (research -> copy -> media -> schedule).
+- [x] Build the Landing Page/Funnel builder for custom single-property sites.
+- [x] Integrate OAuth flows for Facebook, Instagram, LinkedIn, YouTube, and GMB.
+- [x] Deploy the Agentic Content Creator loop (research -> copy -> media -> schedule).
 
 ## Phase 6: Telephony & WebRTC Hooks
 - [ ] Implement database tables for telephony states, call logs, and transcriptions.

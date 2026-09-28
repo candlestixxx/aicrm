@@ -182,3 +182,57 @@ model CampaignStep {
 
   campaign    Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
 }
+
+// ----------------------------------------------------------------------------
+// Phase 5: Marketing & Social Studio
+// ----------------------------------------------------------------------------
+
+model Funnel {
+  id          String   @id @default(uuid())
+  tenantId    String
+  name        String
+  domain      String?  @unique // Custom domain for the funnel
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  pages       LandingPage[]
+}
+
+model LandingPage {
+  id          String   @id @default(uuid())
+  funnelId    String
+  name        String
+  slug        String   // e.g., /home, /opt-in
+  content     Json?    // Serialized layout data (e.g., from a block builder)
+  published   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  funnel      Funnel   @relation(fields: [funnelId], references: [id], onDelete: Cascade)
+}
+
+model SocialAccount {
+  id           String   @id @default(uuid())
+  tenantId     String
+  platform     String   // e.g., 'FACEBOOK', 'LINKEDIN', 'INSTAGRAM'
+  accessToken  String   // In reality, this should be encrypted
+  refreshToken String?
+  profileName  String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  posts        SocialPost[]
+}
+
+model SocialPost {
+  id              String   @id @default(uuid())
+  socialAccountId String
+  content         String
+  mediaUrls       Json?    // Array of strings (images/videos)
+  scheduledFor    DateTime?
+  status          String   @default("DRAFT") // DRAFT, SCHEDULED, PUBLISHED, FAILED
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  account         SocialAccount @relation(fields: [socialAccountId], references: [id], onDelete: Cascade)
+}

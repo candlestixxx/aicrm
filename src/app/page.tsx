@@ -1,6 +1,8 @@
 import ModelManager from '@/components/ModelManager';
 import ContactManager from '@/components/ContactManager';
 import WorkflowManager from '@/components/WorkflowManager';
+import FunnelBuilder from "@/components/FunnelBuilder";
+import SocialStudio from "@/components/SocialStudio";
 
 export default function Home() {
   // Using a dummy tenant ID for local MVP testing
@@ -12,6 +14,9 @@ export default function Home() {
         <ModelManager />
         <ContactManager />
         <WorkflowManager tenantId={dummyTenantId} />
+
+        <FunnelBuilder tenantId={dummyTenantId} />
+        <SocialStudio tenantId={dummyTenantId} />
       </div>
     </main>
   );
