@@ -1,5 +1,6 @@
-# TODO — Immediate Next Actions
+# Short-Term TODOs (Phase 6)
 
+<<<<<<< HEAD
 ## Completed (Session 2026-08-13, v0.5.0)
 - [x] **MCP server** — `/api/mcp` exposes 10 CRM tools to external AI agents (JSON-RPC 2.0, MCP spec)
 - [x] **Workflow engine** — conditional if/then automation (5 triggers, 5 actions)
@@ -48,3 +49,10 @@
 - [ ] Commit all changes to `main`
 - [ ] Consider deleting stale remote branches
 - [ ] Add CI pipeline (lint + test + build on PR)
+=======
+- [ ] Implement database tables for telephony states, call logs, and transcriptions.
+- [ ] Run `npx prisma generate` to validate the new schema.
+- [ ] Open WebRTC websocket endpoints for bi-directional audio streams.
+- [ ] Connect the upcoming LEADG AI voice dialer architecture.
+- [ ] Complete frontend visual verification using Playwright.
+>>>>>>> origin/jules-3434254056450392757-d9850c0f

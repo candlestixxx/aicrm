@@ -1,211 +1,129 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/db/prisma';
-import { getSession } from '@/lib/auth/jwt';
-import { triggerWorkflows } from '@/lib/hypernexus/workflows';
+import { triggerBackgroundEnrichment } from '@/lib/agents/enrichment';
+
+// MOCK: In a real app, tenantId is extracted securely from the user's auth token
+const MOCK_TENANT_ID = '00000000-0000-0000-0000-000000000000';
 
 export async function GET(request: NextRequest) {
-  const session = await getSession();
-  if (!session) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+    try {
+        const url = new URL(request.url);
+        const stageFilter = url.searchParams.get('stage');
+        const tagFilter = url.searchParams.get('tag');
 
-  const { searchParams } = new URL(request.url);
-  const page = parseInt(searchParams.get('page') || '1');
-  const limit = parseInt(searchParams.get('limit') || '25');
-  const search = searchParams.get('search') || '';
-  const status = searchParams.get('status'); // lead status filter
-  const tag = searchParams.get('tag');
-  const source = searchParams.get('source');
-  const assignedTo = searchParams.get('assignedTo');
-  const sort = searchParams.get('sort') || 'createdAt';
-  const order = searchParams.get('order') || 'desc';
-
-  const where: Record<string, unknown> = {
-    brokerageId: session.brokerageId,
-  };
-
-  if (search) {
-    where.OR = [
-      { firstName: { contains: search } },
-      { lastName: { contains: search } },
-      { email: { contains: search } },
-      { phone: { contains: search } },
-      { city: { contains: search } },
-      { tags: { contains: search } },
-    ];
-  }
-
-  if (source) where.source = source;
-  if (assignedTo) where.assignedAgentId = assignedTo;
-
-  // Lead-specific filters via the lead relation
-  const leadWhere: Record<string, unknown> = {};
-  if (status) leadWhere.status = status;
-
-  if (Object.keys(leadWhere).length > 0) {
-    where.lead = leadWhere;
-  }
-
-  if (tag) {
-    // SQLite doesn't have native JSON contains — filter in memory for small datasets
-    // For production PostgreSQL, use jsonb operators
-  }
-
-  try {
-    const [contacts, total] = await Promise.all([
-      prisma.contact.findMany({
-        where,
-        include: {
-          lead: {
-            include: {
-              stage: true,
-              pipeline: true,
+        // Smart Filter Segment Logic
+        const queryOptions: import("@prisma/client").Prisma.ContactFindManyArgs = {
+            where: {
+                tenantId: MOCK_TENANT_ID // Strict data isolation
             },
-          },
-          assignedAgent: {
-            select: { id: true, user: { select: { name: true, email: true } } },
-          },
-        },
-        orderBy: { [sort]: order },
-        skip: (page - 1) * limit,
-        take: limit,
-      }),
-      prisma.contact.count({ where }),
-    ]);
+            include: {
+                tags: {
+                    include: {
+                        tag: true
+                    }
+                },
+                mlsData: true
+            },
+            orderBy: {
+                createdAt: 'desc'
+            }
+        };
 
-    return NextResponse.json({
-      contacts,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-      },
-    });
-  } catch (error) {
-    console.error('Error fetching contacts:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch contacts' },
-      { status: 500 }
-    );
-  }
+        if (stageFilter) {
+            queryOptions.where = { ...queryOptions.where, stage: stageFilter };
+        }
+
+        if (tagFilter) {
+            queryOptions.where = {
+                ...queryOptions.where,
+                tags: {
+                    some: {
+                        tag: {
+                            name: tagFilter
+                        }
+                    }
+                }
+            };
+        }
+
+        const contacts = await prisma.contact.findMany(queryOptions);
+
+        return NextResponse.json({ contacts });
+    } catch (error) {
+        console.error('Error fetching contacts:', error);
+        return NextResponse.json({ error: 'Failed to fetch contacts' }, { status: 500 });
+    }
 }
 
 export async function POST(request: NextRequest) {
-  const session = await getSession();
-  if (!session) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+    try {
+        const body = await request.json();
+        const { firstName, lastName, email, phone, source, initialTags } = body;
 
-  try {
-    const body = await request.json();
-    const {
-      firstName,
-      lastName,
-      email,
-      phone,
-      phone2,
-      address,
-      city,
-      state,
-      zip,
-      source,
-      tags,
-      notes,
-      isLead,
-      // Lead fields
-      status: leadStatus,
-      budgetMin,
-      budgetMax,
-      propertyType,
-      timeline,
-      pipelineId,
-      stageId,
-    } = body;
+        if (!firstName) {
+            return NextResponse.json({ error: 'First name is required' }, { status: 400 });
+        }
 
-    if (!firstName || !lastName) {
-      return NextResponse.json(
-        { error: 'First name and last name are required' },
-        { status: 400 }
-      );
-    }
-
-    // Get default pipeline if creating a lead
-    let resolvedPipelineId = pipelineId;
-    let resolvedStageId = stageId;
-
-    if (isLead && !resolvedPipelineId) {
-      const defaultPipeline = await prisma.pipeline.findFirst({
-        where: { brokerageId: session.brokerageId, isDefault: true },
-        include: { stages: { orderBy: { order: 'asc' }, take: 1 } },
-      });
-      if (defaultPipeline) {
-        resolvedPipelineId = defaultPipeline.id;
-        resolvedStageId = defaultPipeline.stages[0]?.id;
-      }
-    }
-
-    const contact = await prisma.contact.create({
-      data: {
-        brokerageId: session.brokerageId!,
-        assignedAgentId: session.agentId,
-        firstName,
-        lastName,
-        email: email || null,
-        phone: phone || null,
-        phone2: phone2 || null,
-        address: address || null,
-        city: city || null,
-        state: state || null,
-        zip: zip || null,
-        source: source || null,
-        tags: tags ? JSON.stringify(tags) : '[]',
-        notes: notes || null,
-        isLead: isLead || false,
-        ...(isLead && {
-          lead: {
+        // Ensure the mock tenant exists for demo purposes
+        await prisma.tenant.upsert({
+            where: { id: MOCK_TENANT_ID },
+            update: {},
             create: {
-              status: leadStatus || 'new',
-              budgetMin: budgetMin || null,
-              budgetMax: budgetMax || null,
-              propertyType: propertyType || null,
-              timeline: timeline || null,
-              pipelineId: resolvedPipelineId,
-              stageId: resolvedStageId,
+                id: MOCK_TENANT_ID,
+                name: 'Default Demo Tenant',
+                domain: 'demo.aicrm.local'
+            }
+        });
+
+        // Prepare the tag connections if any exist
+        let tagConnections = {};
+
+        if (initialTags && Array.isArray(initialTags) && initialTags.length > 0) {
+            tagConnections = {
+                create: initialTags.map(tagName => ({
+                    tag: {
+                        connectOrCreate: {
+                            where: {
+                                tenantId_name: {
+                                    tenantId: MOCK_TENANT_ID,
+                                    name: tagName
+                                }
+                            },
+                            create: {
+                                tenantId: MOCK_TENANT_ID,
+                                name: tagName,
+                                color: '#3B82F6' // Default blue
+                            }
+                        }
+                    }
+                }))
+            };
+        }
+
+        const newContact = await prisma.contact.create({
+            data: {
+                tenantId: MOCK_TENANT_ID, // Strict data isolation
+                firstName,
+                lastName,
+                email,
+                phone,
+                source,
+                tags: tagConnections
             },
-          },
-        }),
-      },
-      include: {
-        lead: { include: { stage: true } },
-      },
-    });
+            include: {
+                tags: {
+                    include: { tag: true }
+                }
+            }
+        });
 
-    // Log activity
-    await prisma.activity.create({
-      data: {
-        contactId: contact.id,
-        type: 'note',
-        description: 'Contact created',
-      },
-    });
+        // Trigger the background enrichment agent
+        triggerBackgroundEnrichment(newContact.id, newContact.email);
 
-    // Trigger HyperNexus workflows
-    const lead = contact.isLead ? contact.lead : null;
-    await triggerWorkflows({
-      event: contact.isLead ? 'lead_created' : 'contact_created',
-      brokerageId: session.brokerageId!,
-      contactId: contact.id,
-      leadId: lead?.id,
-      data: { source: contact.source || '', firstName: contact.firstName },
-    });
+        return NextResponse.json({ success: true, contact: newContact }, { status: 201 });
 
-    return NextResponse.json({ contact }, { status: 201 });
-  } catch (error) {
-    console.error('Error creating contact:', error);
-    return NextResponse.json(
-      { error: 'Failed to create contact' },
-      { status: 500 }
-    );
-  }
+    } catch (error) {
+        console.error('Error creating contact:', error);
+        return NextResponse.json({ error: 'Failed to create contact' }, { status: 500 });
+    }
 }

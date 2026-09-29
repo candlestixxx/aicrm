@@ -1,5 +1,6 @@
-# Roadmap
+# Long-Term Structural Roadmap
 
+<<<<<<< HEAD
 ## Phase 1: Foundation (v0.1.x → v0.3.x) — ✅ COMPLETE
 - [x] Scaffold Next.js 16 app with TypeScript and Tailwind CSS
 - [x] Set up Prisma ORM
@@ -58,3 +59,27 @@
 - [ ] Enterprise SSO / SAML
 - [ ] PostgreSQL production deployment (adapter ready, needs hosted DB + `prisma migrate deploy`)
 - [ ] Redis-based rate limiting for multi-instance deployments
+=======
+## Phase 3: Real Estate Data Architecture (Lofty Parity & Compliance)
+- [ ] Implement multi-tenant schema (`Tenant`, `Brokerage`, `AgentProfile`).
+- [ ] Deploy Smart Contact Management system (`Contact`, `Tag`, `ContactTag`, `MlsData`).
+- [ ] Build basic UI for viewing and tagging leads.
+- [ ] Develop the background web-scrubbing agent for lead enrichment.
+- [ ] Ensure strict data isolation between tenants.
+
+## Phase 4: Agentic Automation Engine (GoHighLevel Parity)
+- [x] Replace visual node graphs with NLP-driven workflows in the backend.
+- [x] Build the Workflow Engine backend to handle triggers (SMS, tags, forms).
+- [x] Develop the natural-language prompt interface in the frontend.
+- [x] Integrate Drip/Smart Campaigns for email and SMS outreach.
+
+## Phase 5: Marketing & Social Studio
+- [x] Build the Landing Page/Funnel builder for custom single-property sites.
+- [x] Integrate OAuth flows for Facebook, Instagram, LinkedIn, YouTube, and GMB.
+- [x] Deploy the Agentic Content Creator loop (research -> copy -> media -> schedule).
+
+## Phase 6: Telephony & WebRTC Hooks
+- [ ] Implement database tables for telephony states, call logs, and transcriptions.
+- [ ] Open WebRTC websocket endpoints for bi-directional audio streams.
+- [ ] Connect the upcoming LEADG AI voice dialer.
+>>>>>>> origin/jules-3434254056450392757-d9850c0f

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Environment variables (contains API keys - never commit)
 .env
 .env.local
@@ -10,10 +11,13 @@ dev.db
 dev.db-journal
 dev.db-shm
 dev.db-wal
+=======
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+>>>>>>> origin/jules-3434254056450392757-d9850c0f
 
-# Dependencies
-node_modules/
-.pnp
+# dependencies
+/node_modules
+/.pnp
 .pnp.*
 .yarn/*
 !.yarn/patches
@@ -21,50 +25,37 @@ node_modules/
 !.yarn/releases
 !.yarn/versions
 
-# Build output
-.next/
-out/
-build/
-dist/
+# testing
+/coverage
 
-# IDE / Editor
-.idea/
-.vscode/
-*.swp
-*.swo
-*~
+# next.js
+/.next/
+/out/
 
-# OS
+# production
+/build
+
+# misc
 .DS_Store
-Thumbs.db
+*.pem
 
-# Debug
+# debug
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-pnpm-debug.log*
 .pnpm-debug.log*
 
-# TypeScript
+# env files (can opt-in for committing if needed)
+.env*
+
+# vercel
+.vercel
+
+# typescript
 *.tsbuildinfo
 next-env.d.ts
 
-# Testing
-coverage/
-.nyc_output/
-
-# Vercel
-.vercel
-
-# Prisma generated
 /src/generated/prisma
-
-# AI tooling
 .agents/
 .windsurf/
 skills-lock.json
-
-# Misc
-*.pem
-tmp/
-temp/
