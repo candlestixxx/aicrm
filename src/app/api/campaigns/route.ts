@@ -10,9 +10,9 @@ export async function GET() {
 
   try {
     const campaigns = await prisma.campaign.findMany({
-      where: { brokerageId: session.brokerageId },
+      where: { tenantId: session.brokerageId },
       include: {
-        steps: { orderBy: { order: 'asc' } },
+        steps: { orderBy: { orderIndex: 'asc' } },
       },
       orderBy: { createdAt: 'desc' },
     });

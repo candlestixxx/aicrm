@@ -3,7 +3,7 @@ import prisma from '@/lib/db/prisma';
 import { getSession } from '@/lib/auth/jwt';
 import { encrypt } from '@/lib/encryption';
 
-export const SECRET_CATEGORIES = [
+const SECRET_CATEGORIES = [
   { value: 'api_key', label: 'API Keys', icon: 'key' },
   { value: 'oauth', label: 'OAuth Tokens', icon: 'link' },
   { value: 'password', label: 'Passwords', icon: 'lock' },

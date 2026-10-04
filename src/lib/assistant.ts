@@ -7,10 +7,14 @@ async function callLLM(prompt: string, system?: string): Promise<string | null> 
 }
 
 // ─── 2. Next Best Action ────────────────────────────────────────
-export async function nextBestAction(brokerageId: string) {
+async function resolveTenantId(brokerageId        )                              {
+  const b = await prisma.brokerage.findUnique({ where: { id: brokerageId }, select: { tenantId: true } });
+  return b?.tenantId;
+}export async function nextBestAction(brokerageId: string) {
+  const tid = await resolveTenantId(brokerageId);
   const leads = await prisma.lead.findMany({
     where: {
-      contact: { brokerageId },
+      contact: { tenantId: tid },
       status: { in: ['new', 'active', 'hot', 'cold'] },
     },
     include: {
@@ -53,10 +57,11 @@ export async function nextBestAction(brokerageId: string) {
 
 // ─── 3. Smart Nudges (reminders) ────────────────────────────────
 export async function getNudges(brokerageId: string) {
+  const tid = await resolveTenantId(brokerageId);
   const now = new Date();
   const leads = await prisma.lead.findMany({
     where: {
-      contact: { brokerageId },
+      contact: { tenantId: tid },
       status: { in: ['new', 'active', 'hot'] },
     },
     include: { contact: { select: { firstName: true, lastName: true } } },
@@ -92,9 +97,10 @@ export async function getNudges(brokerageId: string) {
 
 // ─── 8. Lead Going-Cold Detector ────────────────────────────────
 export async function leadHealth(brokerageId: string) {
+  const tid = await resolveTenantId(brokerageId);
   const leads = await prisma.lead.findMany({
     where: {
-      contact: { brokerageId },
+      contact: { tenantId: tid },
       status: { in: ['hot', 'active'] },
     },
     include: {
@@ -143,7 +149,7 @@ export async function matchProperties(brokerageId: string) {
   const [leads, properties] = await Promise.all([
     prisma.lead.findMany({
       where: {
-        contact: { brokerageId },
+        contact: { tenantId: tid },
         status: { in: ['new', 'active', 'hot'] },
       },
       include: { contact: { select: { firstName: true, lastName: true } } },
@@ -209,11 +215,14 @@ export async function enrichLead(contactId: string) {
 
 // ─── 11. Daily Digest ───────────────────────────────────────────
 export async function dailyDigest(brokerageId: string) {
+  // Contact uses tenantId, not brokerageId — resolve tenantId from brokerage
+  const brokerage = await prisma.brokerage.findUnique({ where: { id: brokerageId } });
+  const tid = brokerage?.tenantId;
   const [contactCount, leadCount, hotLeads, pendingTasks, atRisk, nudges] =
     await Promise.all([
-      prisma.contact.count({ where: { brokerageId } }),
-      prisma.lead.count({ where: { contact: { brokerageId } } }),
-      prisma.lead.count({ where: { contact: { brokerageId }, status: 'hot' } }),
+      prisma.contact.count({ where: { tenantId: tid } }),
+      prisma.lead.count({ where: { contact: { tenantId: tid } } }),
+      prisma.lead.count({ where: { contact: { tenantId: tid }, status: 'hot' } }),
       prisma.task.count({ where: { agent: { brokerageId }, status: 'pending' } }),
       leadHealth(brokerageId),
       getNudges(brokerageId),

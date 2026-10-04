@@ -11,6 +11,16 @@ const prisma = new PrismaClient({ adapter });
 async function main() {
   console.log('Seeding database...');
 
+  // Create demo tenant (required by Brokerage.tenantId)
+  const tenant = await prisma.tenant.upsert({
+    where: { id: 'demo-tenant' },
+    update: {},
+    create: {
+      id: 'demo-tenant',
+      name: 'Demo Tenant',
+    },
+  });
+
   // Create demo brokerage
   const brokerage = await prisma.brokerage.upsert({
     where: { slug: 'demo-realty' },
@@ -22,6 +32,7 @@ async function main() {
       phone: '(555) 555-5555',
       website: 'https://demorealty.example.com',
       mlsId: 'DEMO-MLS-001',
+      tenantId: tenant.id,
     },
   });
 
@@ -152,22 +163,21 @@ async function main() {
   ];
 
   for (const c of demoContacts) {
-    const { status, tags, ...contactData } = c;
+    // Strip fields that don't exist on the Contact model (city/state/zip/address/isLead)
+    // Contact only has: id, tenantId, agentId, firstName, lastName, email, phone, stage, source, enrichedData
+    const { status, tags, city, state, zip, address, isLead, ...contactData } = c;
     await prisma.contact.create({
       data: {
         ...contactData,
-        brokerageId: brokerage.id,
-        assignedAgentId: agent.id,
-        tags,
-        isLead: true,
-        lead: {
-          create: {
+        tenantId: tenant.id,
+        leads: {
+          create: [{
             status,
             pipelineId: pipeline.id,
             stageId: 'demo-stage-' + (status === 'new' ? 0 : status === 'cold' ? 1 : status === 'closed_won' ? 5 : 2),
             propertyType: contactData.firstName === 'Michael' ? 'multi_family' : 'single_family',
             timeline: 'immediate',
-          },
+          }],
         },
       },
     });

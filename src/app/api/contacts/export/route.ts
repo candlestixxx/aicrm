@@ -20,8 +20,8 @@ export async function GET() {
 
   try {
     const contacts = await prisma.contact.findMany({
-      where: { brokerageId: session.brokerageId },
-      include: { lead: true },
+      where: { tenantId: session.brokerageId },
+      include: { leads: true },
       orderBy: { createdAt: 'desc' },
     });
 

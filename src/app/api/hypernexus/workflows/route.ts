@@ -11,15 +11,16 @@ export async function GET() {
 
   try {
     const workflows = await prisma.workflow.findMany({
-      where: { brokerageId: session.brokerageId },
+      where: { tenantId: session.brokerageId },
+      include: { triggers: true, actions: true },
       orderBy: { createdAt: 'desc' },
     });
 
     return NextResponse.json({
       workflows: workflows.map((w) => ({
         ...w,
-        triggerCondition: w.triggerCondition ? JSON.parse(w.triggerCondition) : null,
-        actions: JSON.parse(w.actions),
+        triggers: w.triggers,
+        actions: w.actions,
       })),
       triggerEvents: TRIGGER_EVENTS,
     });

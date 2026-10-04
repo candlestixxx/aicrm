@@ -14,9 +14,8 @@ export async function GET() {
       select: {
         id: true,
         platform: true,
-        pageId: true,
-        pageName: true,
-        expiresAt: true,
+        profileName: true,
+        agentId: true,
         createdAt: true,
         updatedAt: true,
       },

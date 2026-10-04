@@ -21,9 +21,9 @@ export async function GET() {
           },
         },
         team: true,
-        contacts: { select: { id: true } },
+        managedContacts: { select: { id: true } },
         _count: {
-          select: { contacts: true, tasks: true, listedProperties: true },
+          select: { managedContacts: true, tasks: true, listedProperties: true },
         },
       },
       orderBy: { createdAt: 'asc' },

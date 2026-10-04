@@ -127,15 +127,28 @@ model Tenant {
 }
 
 model Brokerage {
+  slug      String   @unique
   id        String   @id @default(uuid())
   tenantId  String
   name      String
+  address   String?
+  phone     String?
+  website   String?
   mlsId     String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   tenant    Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   agents    AgentProfile[]
+  teams             Team[]
+  pipelines         Pipeline[]
+  properties        Property[]
+  listingStatusLogs ListingStatusLog[]
+  secrets           Secret[]
+  approvalQueues    ApprovalQueue[]
+  agentAuditLogs    AgentAuditLog[]
+  brokerAgents      Agent[]
+  vectorEmbeddings  VectorEmbedding[]
 }
 
 model Team {
@@ -169,7 +182,7 @@ model Agent {
   brokerage        Brokerage       @relation(fields: [brokerageId], references: [id], onDelete: Cascade)
   team             Team?           @relation("TeamMembers", fields: [teamId], references: [id])
   ledTeam          Team?           @relation("TeamLead")
-  contacts         Contact[]
+  managedContacts Contact[] @relation("AgentManagedContacts")
   tasks            Task[]
   listedProperties Property[]
   socialAccounts   SocialAccount[]
@@ -212,6 +225,13 @@ model Contact {
   agent        AgentProfile? @relation(fields: [agentId], references: [id], onDelete: SetNull)
   tags         ContactTag[]
   mlsData      MlsData?
+  leads          Lead[]
+  properties     Property[]
+  tasks          Task[] @relation("TaskContact")
+  activities     Activity[]
+  communications Communication[]
+  managerAgentId String?
+  managerAgent   Agent?   @relation("AgentManagedContacts", fields: [managerAgentId], references: [id], onDelete: SetNull)
 }
 
 model Tag {
@@ -448,12 +468,16 @@ model WorkflowTrigger {
   workflowId String
   type       String   // e.g., 'TAG_ADDED', 'INCOMING_SMS', 'FORM_SUBMITTED'
   config     Json?    // Optional configuration, e.g., { "tagName": "Hot Lead" }
+  workflow Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+}
 
 model WorkflowAction {
   id         String   @id @default(uuid())
   workflowId String
   type       String   // e.g., 'UPDATE_STAGE', 'SEND_EMAIL', 'START_CAMPAIGN'
   config     Json?    // Optional configuration, e.g., { "stage": "Nurturing" }
+  workflow Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+}
 
 model Campaign {
   id          String   @id @default(uuid())
@@ -464,6 +488,7 @@ model Campaign {
   updatedAt   DateTime @updatedAt
 
   steps       CampaignStep[]
+  executionLogs CampaignExecutionLog[]
 }
 
 model CampaignStep {
@@ -476,6 +501,7 @@ model CampaignStep {
   createdAt   DateTime @default(now())
 
   campaign    Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  executionLogs CampaignExecutionLog[]
 }
 
 model CampaignExecutionLog {
@@ -528,7 +554,34 @@ model SocialAccount {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
+  agentId      String?
+  agent        Agent?    @relation(fields: [agentId], references: [id], onDelete: SetNull)
   posts        SocialPost[]
+}
+
+model SocialPost {
+  id            String   @id @default(uuid())
+  socialAccountId String
+  content       String
+  scheduledAt   DateTime?
+  publishedAt   DateTime?
+  status        String   @default("DRAFT") // DRAFT, SCHEDULED, PUBLISHED, FAILED
+  platformPostId String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  socialAccount SocialAccount @relation(fields: [socialAccountId], references: [id], onDelete: Cascade)
+}
+
+model Segment {
+  id        String   @id @default(uuid())
+  agentId   String
+  name      String
+  criteria  Json?    // Filter criteria for contact segmentation
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  agent     Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
 }
 
 model ApprovalQueue {
