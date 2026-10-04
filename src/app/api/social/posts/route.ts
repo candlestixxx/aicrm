@@ -51,12 +51,12 @@ export async function GET(req: Request) {
 
     const posts = await prisma.socialPost.findMany({
       where: {
-        account: {
+        socialAccount: {
           tenantId: tenantId
         }
       },
       include: {
-        account: true,
+        socialAccount: true,
       },
       orderBy: { createdAt: "desc" },
     });
