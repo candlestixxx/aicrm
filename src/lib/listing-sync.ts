@@ -50,7 +50,7 @@ export async function applyListingStatusChange(input: {
         ? { mlsNumber: input.mlsNumber }
         : undefined,
     include: {
-      contact: { include: { lead: true } },
+      contact: { include: { leads: true } },
     },
   });
 

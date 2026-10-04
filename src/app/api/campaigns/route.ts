@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { name, description, type, channel, steps } = body;
+    const { name, status, steps } = body;
 
     if (!name) {
       return NextResponse.json(
@@ -47,32 +47,24 @@ export async function POST(request: NextRequest) {
     const campaign = await prisma.campaign.create({
       data: {
         name,
-        description: description || null,
-        type: type || 'drip',
-        channel: channel || 'email',
-        brokerageId: session.brokerageId!,
+        status: status || 'DRAFT',
+        tenantId: session.brokerageId!,
         steps: {
           create: (steps || []).map(
             (s: {
-              name: string;
+              type: string;
+              content?: string;
               delayHours: number;
-              channel: string;
-              subject?: string;
-              body: string;
-              condition?: string;
             }, i: number) => ({
-              name: s.name,
-              order: i,
+              type: s.type || 'EMAIL',
+              content: s.content || null,
               delayHours: s.delayHours || 0,
-              channel: s.channel || 'email',
-              subject: s.subject || null,
-              body: s.body,
-              condition: s.condition || null,
+              orderIndex: i,
             })
           ),
         },
       },
-      include: { steps: { orderBy: { order: 'asc' } } },
+      include: { steps: { orderBy: { orderIndex: 'asc' } } },
     });
 
     return NextResponse.json({ campaign }, { status: 201 });

@@ -21,11 +21,7 @@ export async function POST(req: Request) {
         },
       },
       include: {
-        actions: {
-          orderBy: {
-            orderIndex: "asc",
-          },
-        },
+        actions: true,
       },
     });
 
