@@ -3,7 +3,13 @@ import prisma from "@/lib/db/prisma";
 
 export async function POST(req: Request) {
   try {
-    const { tenantId, name, domain } = await req.json();
+    let parsed;
+    try {
+      parsed = await req.json();
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    }
+    const { tenantId, name, domain } = parsed;
 
     if (!tenantId || !name) {
       return NextResponse.json(

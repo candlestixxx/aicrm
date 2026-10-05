@@ -4,7 +4,13 @@ import prisma from "@/lib/db/prisma";
 
 export async function POST(req: Request) {
   try {
-    const { tenantId, topic, platforms } = await req.json();
+    let parsed;
+    try {
+      parsed = await req.json();
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    }
+    const { tenantId, topic, platforms } = parsed;
 
     if (!tenantId || !topic || !platforms || platforms.length === 0) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
