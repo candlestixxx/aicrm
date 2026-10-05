@@ -4,7 +4,13 @@ import { hashPassword } from '@/lib/auth/password';
 
 export async function POST(request: NextRequest) {
   try {
-    const { token, password } = await request.json();
+    let __body;
+    try {
+      __body = await request.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    }
+    const { token, password } = __body;
 
     if (!token || !password) {
       return NextResponse.json(

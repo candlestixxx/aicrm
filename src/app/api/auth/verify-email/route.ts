@@ -9,7 +9,13 @@ import crypto from 'crypto';
  */
 export async function POST(request: NextRequest) {
   try {
-    const { email } = await request.json();
+    let __body;
+    try {
+      __body = await request.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    }
+    const { email } = __body;
 
     if (!email) {
       return NextResponse.json({ error: 'Email is required' }, { status: 400 });

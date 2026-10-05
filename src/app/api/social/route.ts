@@ -38,7 +38,13 @@ export async function DELETE(request: Request) {
   }
 
   try {
-    const { platform } = await request.json();
+    let __body;
+    try {
+      __body = await request.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    }
+    const { platform } = __body;
 
     if (!platform) {
       return NextResponse.json(

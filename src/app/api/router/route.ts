@@ -100,7 +100,12 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const body: RouterRequest = await request.json();
+    let body: RouterRequest;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
 
     if (!body.task) {
       return NextResponse.json(

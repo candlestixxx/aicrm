@@ -71,7 +71,12 @@ export async function PATCH(
       return NextResponse.json({ error: 'Secret not found' }, { status: 404 });
     }
 
-    const body = await request.json();
+    let body;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    }
     const { category, label, value, metadata } = body;
 
     const secret = await prisma.secret.update({

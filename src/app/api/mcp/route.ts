@@ -66,7 +66,11 @@ export async function POST(request: NextRequest) {
   let body: { method?: string; params?: Record<string, unknown>; id?: number | string | null };
 
   try {
-    body = await request.json();
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    }
   } catch {
     return NextResponse.json(
       { jsonrpc: '2.0', id: null, error: { code: -32700, message: 'Parse error: invalid JSON' } },

@@ -15,7 +15,12 @@ export async function PATCH(
   const { id } = await params;
 
   try {
-    const body = await request.json();
+    let body;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    }
     const { status, stageId, pipelineId, score, notes } = body;
 
     // Verify lead exists and belongs to user's brokerage

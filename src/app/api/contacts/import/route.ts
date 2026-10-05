@@ -64,7 +64,12 @@ export async function POST(request: NextRequest) {
       }
       csvText = await file.text();
     } else {
-      const body = await request.json();
+      let body;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    }
       csvText = body.csv;
       if (!csvText) {
         return NextResponse.json({ error: 'CSV data is required' }, { status: 400 });
