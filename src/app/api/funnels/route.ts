@@ -40,6 +40,9 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ success: true, funnel });
   } catch (error) {
+    if ((error as { code?: string })?.code === 'P2002') {
+        return NextResponse.json({ error: 'A record with this unique field already exists' }, { status: 409 });
+      }
     console.error("Failed to create funnel:", error);
     return NextResponse.json(
       { error: "Failed to create funnel" },

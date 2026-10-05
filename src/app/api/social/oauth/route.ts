@@ -27,6 +27,9 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ success: true, account });
   } catch (error) {
+    if ((error as { code?: string })?.code === 'P2002') {
+        return NextResponse.json({ error: 'A record with this unique field already exists' }, { status: 409 });
+      }
     console.error("OAuth completion failed:", error);
     return NextResponse.json({ error: "Failed to connect social account" }, { status: 500 });
   }

@@ -52,6 +52,9 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
+    if ((error as { code?: string })?.code === 'P2002') {
+        return NextResponse.json({ error: 'A record with this unique field already exists' }, { status: 409 });
+      }
     console.error('Error fetching properties:', error);
     return NextResponse.json(
       { error: 'Failed to fetch properties' },
