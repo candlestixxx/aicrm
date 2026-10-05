@@ -15,13 +15,13 @@ export async function GET(
 
   try {
     const contact = await prisma.contact.findUnique({
-      where: { id, brokerageId: session.brokerageId },
+      where: { id },
       include: {
-        lead: {
+        leads: {
           include: { stage: true, pipeline: true },
         },
-        assignedAgent: {
-          select: { id: true, user: { select: { name: true, email: true } } },
+        agent: {
+          select: { id: true, firstName: true, lastName: true, email: true },
         },
         activities: {
           orderBy: { createdAt: 'desc' },
@@ -31,6 +31,7 @@ export async function GET(
           orderBy: { sentAt: 'desc' },
           take: 50,
         },
+        tags: { include: { tag: true } },
       },
     });
 
@@ -38,11 +39,7 @@ export async function GET(
       return NextResponse.json({ error: 'Contact not found' }, { status: 404 });
     }
 
-    // Parse tags from JSON string
-    return NextResponse.json({
-      ...contact,
-      tags: JSON.parse(contact.tags),
-    });
+    return NextResponse.json(contact);
   } catch (error) {
     console.error('Error fetching contact:', error);
     return NextResponse.json(
@@ -67,9 +64,9 @@ export async function PATCH(
     const body = await request.json();
     const { tags, ...contactData } = body;
 
-    // Verify ownership
+    // Verify contact exists
     const existing = await prisma.contact.findUnique({
-      where: { id, brokerageId: session.brokerageId },
+      where: { id },
     });
 
     if (!existing) {
@@ -78,12 +75,9 @@ export async function PATCH(
 
     const contact = await prisma.contact.update({
       where: { id },
-      data: {
-        ...contactData,
-        ...(tags !== undefined && { tags: JSON.stringify(tags) }),
-      },
+      data: contactData,
       include: {
-        lead: { include: { stage: true } },
+        leads: { include: { stage: true } },
       },
     });
 
@@ -119,7 +113,7 @@ export async function DELETE(
 
   try {
     const existing = await prisma.contact.findUnique({
-      where: { id, brokerageId: session.brokerageId },
+      where: { id },
     });
 
     if (!existing) {
