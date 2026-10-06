@@ -69,6 +69,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (contactId) {
+      const contact = await prisma.contact.findUnique({ where: { id: contactId } });
+      if (!contact) return NextResponse.json({ error: 'Contact not found' }, { status: 404 });
+    }
+
     const task = await prisma.task.create({
       data: {
         agentId: session.agentId!,
