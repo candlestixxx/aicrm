@@ -44,10 +44,13 @@ export async function POST(req: Request) {
         if (action.type === "UPDATE_STAGE" && payload.contactId) {
           const config = action.config as { stage?: string };
           if (config && config.stage) {
-            await prisma.contact.update({
-              where: { id: payload.contactId },
-              data: { stage: config.stage },
-            });
+            const contact = await prisma.contact.findUnique({ where: { id: payload.contactId } });
+            if (contact) {
+              await prisma.contact.update({
+                where: { id: payload.contactId },
+                data: { stage: config.stage },
+              });
+            }
             console.log(`   Contact ${payload.contactId} updated to stage ${config.stage}`);
           }
         }
