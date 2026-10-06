@@ -12,8 +12,8 @@ export async function GET(request: NextRequest) {
   const status = searchParams.get('status');
   const propertyType = searchParams.get('propertyType');
   const city = searchParams.get('city');
-  const page = parseInt(searchParams.get('page') || '1');
-  const limit = parseInt(searchParams.get('limit') || '25');
+  const page = Math.max(1, parseInt(searchParams.get('page') || '1') || 1);
+  const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '25') || 25));
 
   const where: Record<string, unknown> = {
     brokerageId: session.brokerageId,
